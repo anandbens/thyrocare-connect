@@ -64,7 +64,7 @@ const AdminCategories = () => {
           <CardTitle className="font-display">Test Categories</CardTitle>
           <div className="flex gap-2">
             <Button onClick={exportToExcel} variant="outline" size="sm"><Download className="h-4 w-4 mr-2" /> Export CSV</Button>
-            <Button onClick={() => { setForm({ id: "", name: "", icon: "🏥", sort_order: 0, is_active: true }); setEditing(false); setDialogOpen(true); }}>
+            <Button onClick={() => { setForm({ id: "", name: "", icon: "Heart", sort_order: 0, is_active: true }); setEditing(false); setDialogOpen(true); }}>
               <Plus className="h-4 w-4 mr-2" /> Add
             </Button>
           </div>
