@@ -16,12 +16,7 @@ import AdminPaginationControls from "@/components/admin/AdminPaginationControls"
 import { useAdminPagination } from "@/hooks/useAdminPagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-
-interface ParamGroup {
-  group: string;
-  count: number;
-  tests: string[];
-}
+import { ParamGroup } from "@/data/tests";
 
 const emptyTest = {
   id: "", name: "", test_code: "", description: "", category_id: "", parameters: 0,
