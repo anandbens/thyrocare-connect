@@ -1,18 +1,26 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout/Layout";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 const Checkout = () => {
   const { items, totalAmount, totalSavings, clearCart } = useCart();
+  const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -42,20 +50,160 @@ const Checkout = () => {
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
+  const createOrder = async () => {
+    // Create order in database first
+    const orderNumber = `DHC-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
+
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        order_number: orderNumber,
+        customer_name: form.name,
+        customer_email: form.email,
+        customer_phone: form.phone,
+        alt_phone: form.altPhone || null,
+        age: form.age ? parseInt(form.age) : null,
+        gender: form.gender,
+        address1: form.address1,
+        address2: form.address2 || null,
+        landmark: form.landmark || null,
+        district: form.district,
+        area: form.area,
+        state: form.state,
+        pincode: form.pincode,
+        preferred_date: form.date || null,
+        preferred_time: form.time,
+        total_amount: totalAmount,
+        total_savings: totalSavings,
+        user_id: user?.id || null,
+        payment_type: "online",
+        payment_status: "pending",
+        order_status: "received",
+      })
+      .select()
+      .single();
+
+    if (orderError || !order) throw new Error(orderError?.message || "Failed to create order");
+
+    // Insert order items
+    const orderItems = items.map((item) => ({
+      order_id: order.id,
+      test_id: item.test.id,
+      test_name: item.test.name,
+      price: item.test.price,
+      original_price: item.test.originalPrice,
+    }));
+
+    await supabase.from("order_items").insert(orderItems);
+
+    return order;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
 
     setLoading(true);
-    // Simulate payment — will be replaced with Razorpay integration
-    await new Promise((r) => setTimeout(r, 1500));
-    toast({
-      title: "Order placed successfully! 🎉",
-      description: "You will receive a confirmation on your email and phone.",
-    });
-    clearCart();
-    navigate("/");
-    setLoading(false);
+    try {
+      // Create order in DB
+      const order = await createOrder();
+
+      // Create Razorpay order via edge function
+      const { data: razorpayData, error: rzpError } = await supabase.functions.invoke(
+        "create-razorpay-order",
+        {
+          body: {
+            amount: totalAmount,
+            currency: "INR",
+            receipt: order.order_number,
+            notes: { order_id: order.id, customer_name: form.name },
+          },
+        }
+      );
+
+      if (rzpError || !razorpayData?.order_id) {
+        // Fallback: mark as COD if payment gateway not configured
+        await supabase
+          .from("orders")
+          .update({ payment_type: "cod", payment_status: "pending", order_status: "confirmed" })
+          .eq("id", order.id);
+
+        toast({
+          title: "Order placed successfully! 🎉",
+          description: "Payment gateway is not configured. Order placed as Cash on Collection.",
+        });
+        clearCart();
+        navigate("/dashboard/orders");
+        return;
+      }
+
+      // Open Razorpay checkout
+      const options = {
+        key: razorpayData.key_id,
+        amount: Math.round(totalAmount * 100),
+        currency: "INR",
+        name: "Daniel Homoeo Clinic",
+        description: `Order ${order.order_number}`,
+        order_id: razorpayData.order_id,
+        prefill: {
+          name: form.name,
+          email: form.email,
+          contact: form.phone,
+        },
+        theme: { color: "#0f8a6c" },
+        handler: async (response: any) => {
+          // Verify payment
+          const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
+            "verify-razorpay-payment",
+            {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                order_id: order.id,
+              },
+            }
+          );
+
+          if (verifyError || !verifyData?.verified) {
+            toast({
+              title: "Payment verification failed",
+              description: "Please contact support with your order number.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          toast({
+            title: "Payment successful! 🎉",
+            description: `Order ${order.order_number} confirmed. You'll receive a confirmation email.`,
+          });
+          clearCart();
+          navigate("/dashboard/orders");
+        },
+        modal: {
+          ondismiss: () => {
+            toast({
+              title: "Payment cancelled",
+              description: "Your order has been saved. You can pay later from your dashboard.",
+            });
+            setLoading(false);
+          },
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error: any) {
+      console.error("Checkout error:", error);
+      toast({
+        title: "Something went wrong",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0) {
@@ -237,9 +385,10 @@ const Checkout = () => {
                     <Button type="submit" className="w-full rounded-xl mt-4" size="lg" disabled={loading}>
                       {loading ? "Processing..." : `Pay ₹${totalAmount}`}
                     </Button>
-                    <p className="text-xs text-muted-foreground text-center mt-2">
+                    <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-2">
+                      <ShieldCheck className="h-3.5 w-3.5" />
                       Secure payment powered by Razorpay
-                    </p>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
