@@ -20,6 +20,22 @@ const VerifyOtp = () => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [fallbackOtp, setFallbackOtp] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFallbackOtp = async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("setting_value")
+        .eq("setting_key", "fallback_otp")
+        .single();
+      const config = data?.setting_value as any;
+      if (config?.enabled && config?.code) {
+        setFallbackOtp(config.code);
+      }
+    };
+    fetchFallbackOtp();
+  }, []);
 
   useEffect(() => {
     if (items.length === 0) {
