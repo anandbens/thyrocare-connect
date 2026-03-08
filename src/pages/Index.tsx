@@ -75,9 +75,12 @@ const Index = () => {
                 Your Health,{" "}
                 <span className="text-accent">Our Priority</span>
               </h1>
-              <p className="text-lg text-primary-foreground/80 leading-relaxed mb-8 max-w-lg">
+              <p className="text-lg text-primary-foreground/80 leading-relaxed mb-4 max-w-lg">
                 Book affordable blood tests and comprehensive health packages online. 
-                NABL accredited lab with free home sample collection across Madurai.
+                NABL accredited lab with free home sample collection.
+              </p>
+              <p className="text-base font-semibold text-accent mb-8">
+                🏠 Home collection throughout Kanyakumari district
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link to="/tests">
