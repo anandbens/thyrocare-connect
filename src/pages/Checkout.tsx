@@ -24,23 +24,35 @@ const Checkout = () => {
 
   const verifiedPhone = (location.state as any)?.verifiedPhone || "";
 
+  const savedForm = (() => {
+    try {
+      const saved = localStorage.getItem("checkout_form");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  })();
+
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: verifiedPhone,
-    altPhone: "",
-    age: "",
-    gender: "male",
-    address1: "",
-    address2: "",
-    landmark: "",
-    district: "",
-    area: "",
-    state: "Tamil Nadu",
-    pincode: "",
+    name: savedForm?.name || "",
+    email: savedForm?.email || "",
+    phone: verifiedPhone || savedForm?.phone || "",
+    altPhone: savedForm?.altPhone || "",
+    age: savedForm?.age || "",
+    gender: savedForm?.gender || "male",
+    address1: savedForm?.address1 || "",
+    address2: savedForm?.address2 || "",
+    landmark: savedForm?.landmark || "",
+    district: savedForm?.district || "",
+    area: savedForm?.area || "",
+    state: savedForm?.state || "Tamil Nadu",
+    pincode: savedForm?.pincode || "",
     date: "",
-    time: "morning",
+    time: savedForm?.time || "morning",
   });
+  // Auto-save form to localStorage (exclude date for freshness)
+  useEffect(() => {
+    const { date, ...toSave } = form;
+    localStorage.setItem("checkout_form", JSON.stringify(toSave));
+  }, [form]);
 
   const [isExistingUser, setIsExistingUser] = useState(false);
 
@@ -256,6 +268,7 @@ const Checkout = () => {
         description: `Order ${order.order_number} received. You will receive payment details via WhatsApp shortly.`,
       });
       clearCart();
+      localStorage.removeItem("checkout_form");
       navigate("/dashboard/orders");
     } catch (error: any) {
       console.error("Checkout error:", error);
