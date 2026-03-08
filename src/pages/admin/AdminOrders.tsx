@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { buildSafeCsv, downloadCsv } from "@/lib/csvSanitize";
 import { Download, Search, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminPaginationControls from "@/components/admin/AdminPaginationControls";
-import { useAdminPagination } from "@/hooks/useAdminPagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -48,6 +47,8 @@ const defaultPaymentConfig: PaymentConfig = {
   whatsapp_number: "",
 };
 
+const ROWS_PER_PAGE = 15;
+
 const buildWhatsAppPaymentMessage = (order: any, config: PaymentConfig) => {
   const tests = order.order_items?.map((i: any) => i.test_name).join(", ") || "N/A";
   let msg = `🏥 *${config.business_name || "Thyrocare Nagercoil"}*\n\n`;
@@ -79,17 +80,32 @@ const AdminOrders = () => {
   const [dateTo, setDateTo] = useState("");
   const [daysFilter, setDaysFilter] = useState("all");
   const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>(defaultPaymentConfig);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*, order_items(*)")
-      .order("created_at", { ascending: false });
-    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else setOrders(data || []);
+    const { data, error } = await supabase.rpc("get_paginated_orders", {
+      p_page: currentPage,
+      p_per_page: ROWS_PER_PAGE,
+      p_search: search || null,
+      p_order_status: statusFilter === "all" ? null : statusFilter,
+      p_payment_status: paymentFilter === "all" ? null : paymentFilter,
+      p_date_from: dateFrom ? new Date(dateFrom).toISOString() : null,
+      p_date_to: dateTo ? new Date(dateTo + "T23:59:59").toISOString() : null,
+    });
+    if (error) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+      setOrders([]);
+    } else {
+      const result = data as any;
+      setOrders(result.data || []);
+      setTotalItems(result.total || 0);
+      setTotalPages(result.total_pages || 1);
+    }
     setLoading(false);
-  };
+  }, [currentPage, search, statusFilter, paymentFilter, dateFrom, dateTo, toast]);
 
   const fetchPaymentConfig = async () => {
     const { data } = await supabase
@@ -102,6 +118,9 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
+  }, [fetchOrders]);
+
+  useEffect(() => {
     fetchPaymentConfig();
   }, []);
 
@@ -114,27 +133,6 @@ const AdminOrders = () => {
     setDateFrom(from.toISOString().split("T")[0]);
     setDateTo(now.toISOString().split("T")[0]);
   };
-
-  const filtered = useMemo(() => {
-    return orders.filter((o) => {
-      if (statusFilter !== "all" && o.order_status !== statusFilter) return false;
-      if (paymentFilter !== "all" && o.payment_status !== paymentFilter) return false;
-      if (dateFrom && o.created_at < dateFrom) return false;
-      if (dateTo && o.created_at > dateTo + "T23:59:59") return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return (
-          o.customer_name?.toLowerCase().includes(q) ||
-          o.customer_phone?.includes(q) ||
-          o.customer_email?.toLowerCase().includes(q) ||
-          o.order_number?.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [orders, search, statusFilter, paymentFilter, dateFrom, dateTo]);
-
-  const { paginatedData, currentPage, totalPages, totalItems, setCurrentPage, rowsPerPage } = useAdminPagination(filtered);
 
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     const { error } = await supabase.from("orders").update({ order_status: newStatus }).eq("id", orderId);
@@ -155,9 +153,21 @@ const AdminOrders = () => {
     window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
+    // Fetch ALL filtered results for export (bypasses pagination)
+    const { data, error } = await supabase.rpc("get_paginated_orders", {
+      p_page: 1,
+      p_per_page: 100000,
+      p_search: search || null,
+      p_order_status: statusFilter === "all" ? null : statusFilter,
+      p_payment_status: paymentFilter === "all" ? null : paymentFilter,
+      p_date_from: dateFrom ? new Date(dateFrom).toISOString() : null,
+      p_date_to: dateTo ? new Date(dateTo + "T23:59:59").toISOString() : null,
+    });
+    if (error) { toast({ title: "Export failed", description: error.message, variant: "destructive" }); return; }
+    const allOrders = (data as any)?.data || [];
     const headers = ["Order #", "Date", "Customer", "Phone", "Email", "Tests", "Amount", "Payment", "Status"];
-    const rows = filtered.map((o) => [
+    const rows = allOrders.map((o: any) => [
       o.order_number,
       new Date(o.created_at).toLocaleDateString(),
       o.customer_name,
@@ -246,10 +256,10 @@ const AdminOrders = () => {
               <TableBody>
                 {loading ? (
                   <TableRow><TableCell colSpan={9} className="text-center py-8">Loading...</TableCell></TableRow>
-                ) : paginatedData.length === 0 ? (
+                ) : orders.length === 0 ? (
                   <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No orders found</TableCell></TableRow>
                 ) : (
-                  paginatedData.map((order) => (
+                  orders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.order_number}</TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
@@ -346,7 +356,7 @@ const AdminOrders = () => {
             currentPage={currentPage}
             totalPages={totalPages}
             totalItems={totalItems}
-            rowsPerPage={rowsPerPage}
+            rowsPerPage={ROWS_PER_PAGE}
             onPageChange={setCurrentPage}
           />
         </CardContent>

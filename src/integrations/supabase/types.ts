@@ -563,6 +563,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_paginated_orders: {
+        Args: {
+          p_date_from?: string
+          p_date_to?: string
+          p_order_status?: string
+          p_page?: number
+          p_payment_status?: string
+          p_per_page?: number
+          p_search?: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
