@@ -12,6 +12,7 @@ import AdminPaginationControls from "@/components/admin/AdminPaginationControls"
 import { useAdminPagination } from "@/hooks/useAdminPagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import MedicalIconPicker from "@/components/admin/MedicalIconPicker";
 
 const AdminCategories = () => {
   const { toast } = useToast();
