@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { buildSafeCsv, downloadCsv } from "@/lib/csvSanitize";
 import { Download, Search, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
