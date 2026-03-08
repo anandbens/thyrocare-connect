@@ -164,16 +164,16 @@ const Index = () => {
       </section>
 
       {/* Popular Tests */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-20 bg-muted/30">
         <div className="container">
-          <div className="flex items-end justify-between mb-10">
+          <div className="flex items-end justify-between mb-12">
             <div>
-              <h2 className="text-3xl font-display font-bold text-foreground mb-2">Popular Tests</h2>
-              <p className="text-muted-foreground">Most booked tests by our patients</p>
+              <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-2">Popular Tests</h2>
+              <p className="text-base lg:text-lg text-muted-foreground">Most booked tests by our patients</p>
             </div>
             <Link to="/tests">
-              <Button variant="ghost" className="text-primary">
-                View All <ArrowRight className="ml-1 h-4 w-4" />
+              <Button variant="ghost" className="text-primary text-base">
+                View All <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
             </Link>
           </div>
