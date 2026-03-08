@@ -44,13 +44,28 @@ const VerifyOtp = () => {
 
     setLoading(true);
     try {
+      // Rate limiting: Check recent OTP requests for this phone (max 5 in 15 min)
+      const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const { count: recentCount } = await supabase
+        .from("otp_logs")
+        .select("id", { count: "exact", head: true })
+        .eq("email", phone)
+        .eq("purpose", "checkout_sms")
+        .gte("created_at", fifteenMinAgo);
+
+      if (recentCount && recentCount >= 5) {
+        toast({ title: "Too many attempts", description: "Please wait 15 minutes before requesting another OTP.", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
+
       // Generate a 6-digit OTP
       const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
       // Store OTP in database
       const { error: otpError } = await supabase.from("otp_logs").insert({
-        email: phone, // using email field for phone
+        email: phone,
         otp_code: otpCode,
         expires_at: expiresAt,
         purpose: "checkout_sms",
@@ -65,7 +80,6 @@ const VerifyOtp = () => {
 
       if (error) {
         console.error("SMS send error:", error);
-        // Still proceed - OTP is stored, show it in dev/test
         toast({
           title: "OTP Generated",
           description: "SMS gateway may not be configured. Check OTP logs in admin panel.",
@@ -83,7 +97,11 @@ const VerifyOtp = () => {
     }
   };
 
-  const FALLBACK_OTP = "226688";
+  // Fallback OTP only works in preview/dev environments
+  const isDevEnvironment = window.location.hostname.includes('lovableproject.com') || 
+    window.location.hostname.includes('lovable.app') ||
+    window.location.hostname === 'localhost';
+  const FALLBACK_OTP = isDevEnvironment ? "226688" : null;
 
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
