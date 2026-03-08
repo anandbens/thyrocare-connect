@@ -79,7 +79,7 @@ const Index = () => {
                 Book affordable blood tests and comprehensive health packages online. 
                 NABL accredited lab with free home sample collection.
               </p>
-              <p className="text-base font-semibold text-accent mb-8">
+              <p className="text-xl lg:text-2xl font-bold text-primary-foreground mb-8">
                 🏠 Home collection throughout Kanyakumari district
               </p>
               <div className="flex flex-wrap gap-3">

@@ -59,12 +59,8 @@ const Header = () => {
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b shadow-sm">
         <div className="container flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3">
-            <img src={thyrocareLogo} alt="Thyrocare Nagercoil" className="h-10 w-10 rounded-xl object-contain" />
-            <div className="hidden sm:block">
-              <h1 className="text-lg font-bold font-display leading-tight text-foreground">
-                Thyrocare Nagercoil
-              </h1>
-            </div>
+            <img src={thyrocareLogo} alt="Thyrocare" className="h-10 w-auto object-contain" />
+            <span className="hidden sm:inline text-lg font-bold font-display text-foreground">Nagercoil</span>
           </Link>
 
           {/* Desktop nav */}
