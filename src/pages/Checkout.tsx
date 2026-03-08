@@ -12,11 +12,6 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const Checkout = () => {
   const { items, totalAmount, totalSavings, clearCart } = useCart();
