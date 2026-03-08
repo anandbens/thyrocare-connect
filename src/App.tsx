@@ -25,7 +25,7 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminMenus from "./pages/admin/AdminMenus";
 import AdminPages from "./pages/admin/AdminPages";
-import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOtpLogs from "./pages/admin/AdminOtpLogs";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import AdminSettings from "./pages/admin/AdminSettings";
