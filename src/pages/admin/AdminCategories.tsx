@@ -76,7 +76,12 @@ const AdminCategories = () => {
               <TableBody>
                 {paginatedData.map((c) => (
                   <TableRow key={c.id}>
-                    <TableCell>{c.icon}</TableCell>
+                    <TableCell>
+                      {(() => {
+                        const IconComp = icons[c.icon as keyof typeof icons];
+                        return IconComp ? <IconComp className="h-5 w-5 text-primary" /> : <span>{c.icon}</span>;
+                      })()}
+                    </TableCell>
                     <TableCell className="font-medium">{c.name}</TableCell>
                     <TableCell>{c.sort_order}</TableCell>
                     <TableCell>{c.is_active ? "✅" : "❌"}</TableCell>
