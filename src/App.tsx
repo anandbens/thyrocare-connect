@@ -70,6 +70,7 @@ const App = () => (
               <Route path="/admin/otp-logs" element={<AdminOtpLogs />} />
               <Route path="/admin/activity-logs" element={<AdminActivityLogs />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin/email-templates" element={<AdminEmailTemplates />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

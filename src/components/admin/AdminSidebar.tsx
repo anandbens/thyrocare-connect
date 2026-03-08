@@ -31,6 +31,7 @@ const allMenuItems: MenuItem[] = [
   { title: "Customers", url: "/admin/customers", icon: Users, roles: ["admin"] },
   { title: "OTP Logs", url: "/admin/otp-logs", icon: Key, roles: ["admin"] },
   { title: "Activity Logs", url: "/admin/activity-logs", icon: Activity, roles: ["admin"] },
+  { title: "Email Templates", url: "/admin/email-templates", icon: Mail, roles: ["admin"] },
   { title: "Settings", url: "/admin/settings", icon: Settings, roles: ["admin"] },
 ];
 
