@@ -14,6 +14,7 @@ import Login from "./pages/Login";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import VerifyOtp from "./pages/VerifyOtp";
 import Dashboard from "./pages/dashboard/Dashboard";
 import UserOrders from "./pages/dashboard/UserOrders";
 import UserReports from "./pages/dashboard/UserReports";
