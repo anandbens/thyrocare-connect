@@ -24,22 +24,29 @@ const Checkout = () => {
 
   const verifiedPhone = (location.state as any)?.verifiedPhone || "";
 
+  const savedForm = (() => {
+    try {
+      const saved = localStorage.getItem("checkout_form");
+      return saved ? JSON.parse(saved) : null;
+    } catch { return null; }
+  })();
+
   const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: verifiedPhone,
-    altPhone: "",
-    age: "",
-    gender: "male",
-    address1: "",
-    address2: "",
-    landmark: "",
-    district: "",
-    area: "",
-    state: "Tamil Nadu",
-    pincode: "",
+    name: savedForm?.name || "",
+    email: savedForm?.email || "",
+    phone: verifiedPhone || savedForm?.phone || "",
+    altPhone: savedForm?.altPhone || "",
+    age: savedForm?.age || "",
+    gender: savedForm?.gender || "male",
+    address1: savedForm?.address1 || "",
+    address2: savedForm?.address2 || "",
+    landmark: savedForm?.landmark || "",
+    district: savedForm?.district || "",
+    area: savedForm?.area || "",
+    state: savedForm?.state || "Tamil Nadu",
+    pincode: savedForm?.pincode || "",
     date: "",
-    time: "morning",
+    time: savedForm?.time || "morning",
   });
 
   const [isExistingUser, setIsExistingUser] = useState(false);
