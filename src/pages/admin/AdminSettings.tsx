@@ -21,6 +21,15 @@ const AdminSettings = () => {
     is_sandbox: true,
   });
 
+  // SMS Gateway settings
+  const [sms, setSms] = useState({
+    gateway_url: "",
+    api_key: "",
+    entity_id: "",
+    sender_id: "",
+    template_id: "",
+  });
+
   // SMTP settings
   const [smtp, setSmtp] = useState({
     host: "",
