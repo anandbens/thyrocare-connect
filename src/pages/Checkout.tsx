@@ -48,6 +48,11 @@ const Checkout = () => {
     date: "",
     time: savedForm?.time || "morning",
   });
+  // Auto-save form to localStorage (exclude date for freshness)
+  useEffect(() => {
+    const { date, ...toSave } = form;
+    localStorage.setItem("checkout_form", JSON.stringify(toSave));
+  }, [form]);
 
   const [isExistingUser, setIsExistingUser] = useState(false);
 
