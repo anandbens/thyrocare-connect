@@ -73,7 +73,7 @@ const Footer = () => {
 
         <div className="border-t border-background/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-background/40">
           <p>© {new Date().getFullYear()} Daniel Homoeo Clinic. All rights reserved.</p>
-          <p>Powered by Thyrocare Technologies Ltd.</p>
+          <p>Powered by <a href="https://www.ecoyte.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Ecoyte Business Solutions Private Limited</a></p>
         </div>
       </div>
     </footer>
