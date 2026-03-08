@@ -73,7 +73,7 @@ const AdminSettings = () => {
     <AdminLayout title="Settings">
       <Tabs defaultValue="payment" className="space-y-6">
          <TabsList>
-          <TabsTrigger value="payment">Payment Gateway</TabsTrigger>
+          <TabsTrigger value="payment">Payment Collection</TabsTrigger>
           <TabsTrigger value="sms">SMS Gateway</TabsTrigger>
           <TabsTrigger value="smtp">SMTP / Email</TabsTrigger>
         </TabsList>
@@ -81,32 +81,37 @@ const AdminSettings = () => {
         <TabsContent value="payment">
           <Card>
             <CardHeader>
-              <CardTitle className="font-display">Razorpay Configuration</CardTitle>
-              <CardDescription>Configure payment gateway for sandbox or production</CardDescription>
+              <CardTitle className="font-display">Payment Collection Settings</CardTitle>
+              <CardDescription>Configure UPI/GPay/PhonePe details for WhatsApp payment collection</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-4 p-4 rounded-lg bg-muted">
-                <Label className="font-medium">Environment:</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">Production</span>
-                  <Switch checked={payment.is_sandbox} onCheckedChange={(v) => setPayment({ ...payment, is_sandbox: v })} />
-                  <span className="text-sm">Sandbox</span>
-                </div>
-                {payment.is_sandbox && (
-                  <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">⚠️ Sandbox Mode</span>
-                )}
-              </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Razorpay Key ID *</Label>
-                  <Input value={payment.razorpay_key_id} onChange={(e) => setPayment({ ...payment, razorpay_key_id: e.target.value })} placeholder="rzp_test_xxx or rzp_live_xxx" />
+                  <Label>Business Name</Label>
+                  <Input value={paymentCollection.business_name} onChange={(e) => setPaymentCollection({ ...paymentCollection, business_name: e.target.value })} placeholder="Thyrocare Nagercoil" />
                 </div>
                 <div className="space-y-2">
-                  <Label>Razorpay Key Secret *</Label>
-                  <Input type="password" value={payment.razorpay_key_secret} onChange={(e) => setPayment({ ...payment, razorpay_key_secret: e.target.value })} placeholder="••••••••" />
+                  <Label>WhatsApp Number (for sending)</Label>
+                  <Input value={paymentCollection.whatsapp_number} onChange={(e) => setPaymentCollection({ ...paymentCollection, whatsapp_number: e.target.value })} placeholder="919876543210" />
+                </div>
+                <div className="space-y-2">
+                  <Label>UPI ID</Label>
+                  <Input value={paymentCollection.upi_id} onChange={(e) => setPaymentCollection({ ...paymentCollection, upi_id: e.target.value })} placeholder="yourname@upi" />
+                </div>
+                <div className="space-y-2">
+                  <Label>GPay Number</Label>
+                  <Input value={paymentCollection.gpay_number} onChange={(e) => setPaymentCollection({ ...paymentCollection, gpay_number: e.target.value })} placeholder="9876543210" />
+                </div>
+                <div className="space-y-2">
+                  <Label>PhonePe Number</Label>
+                  <Input value={paymentCollection.phonepe_number} onChange={(e) => setPaymentCollection({ ...paymentCollection, phonepe_number: e.target.value })} placeholder="9876543210" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Account Holder Name</Label>
+                  <Input value={paymentCollection.account_holder_name} onChange={(e) => setPaymentCollection({ ...paymentCollection, account_holder_name: e.target.value })} placeholder="John Doe" />
                 </div>
               </div>
-              <Button onClick={() => saveSetting("payment_gateway", payment)} disabled={loading}>
+              <Button onClick={() => saveSetting("payment_collection", paymentCollection)} disabled={loading}>
                 <Save className="h-4 w-4 mr-2" /> Save Payment Settings
               </Button>
             </CardContent>

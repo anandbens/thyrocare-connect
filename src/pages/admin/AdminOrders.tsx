@@ -1,11 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
-import { Download, Search } from "lucide-react";
+import { Download, Search, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminPaginationControls from "@/components/admin/AdminPaginationControls";
 import { useAdminPagination } from "@/hooks/useAdminPagination";
@@ -28,6 +29,44 @@ const paymentColors: Record<string, string> = {
   refunded: "bg-gray-100 text-gray-800",
 };
 
+interface PaymentConfig {
+  upi_id: string;
+  phonepe_number: string;
+  gpay_number: string;
+  account_holder_name: string;
+  business_name: string;
+  whatsapp_number: string;
+}
+
+const defaultPaymentConfig: PaymentConfig = {
+  upi_id: "",
+  phonepe_number: "",
+  gpay_number: "",
+  account_holder_name: "",
+  business_name: "Thyrocare Nagercoil",
+  whatsapp_number: "",
+};
+
+const buildWhatsAppPaymentMessage = (order: any, config: PaymentConfig) => {
+  const tests = order.order_items?.map((i: any) => i.test_name).join(", ") || "N/A";
+  let msg = `🏥 *${config.business_name || "Thyrocare Nagercoil"}*\n\n`;
+  msg += `Dear *${order.customer_name}*,\n\n`;
+  msg += `Thank you for your order! Here are the details:\n\n`;
+  msg += `📋 *Order:* ${order.order_number}\n`;
+  msg += `🧪 *Tests:* ${tests}\n`;
+  msg += `💰 *Amount:* ₹${order.total_amount}\n\n`;
+  msg += `━━━━━━━━━━━━━━━━━━━\n`;
+  msg += `💳 *Payment Options:*\n\n`;
+  if (config.upi_id) msg += `🔹 *UPI ID:* ${config.upi_id}\n`;
+  if (config.gpay_number) msg += `🔹 *GPay:* ${config.gpay_number}\n`;
+  if (config.phonepe_number) msg += `🔹 *PhonePe:* ${config.phonepe_number}\n`;
+  if (config.account_holder_name) msg += `🔹 *Name:* ${config.account_holder_name}\n`;
+  msg += `\n━━━━━━━━━━━━━━━━━━━\n\n`;
+  msg += `Please make the payment of *₹${order.total_amount}* using any of the above options and share the screenshot.\n\n`;
+  msg += `Thank you! 🙏`;
+  return msg;
+};
+
 const AdminOrders = () => {
   const { toast } = useToast();
   const [orders, setOrders] = useState<any[]>([]);
@@ -38,6 +77,7 @@ const AdminOrders = () => {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [daysFilter, setDaysFilter] = useState("all");
+  const [paymentConfig, setPaymentConfig] = useState<PaymentConfig>(defaultPaymentConfig);
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -50,7 +90,19 @@ const AdminOrders = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchOrders(); }, []);
+  const fetchPaymentConfig = async () => {
+    const { data } = await supabase
+      .from("site_settings")
+      .select("setting_value")
+      .eq("setting_key", "payment_collection")
+      .single();
+    if (data?.setting_value) setPaymentConfig(data.setting_value as unknown as PaymentConfig);
+  };
+
+  useEffect(() => {
+    fetchOrders();
+    fetchPaymentConfig();
+  }, []);
 
   const handleDaysFilter = (days: string) => {
     setDaysFilter(days);
@@ -87,6 +139,19 @@ const AdminOrders = () => {
     const { error } = await supabase.from("orders").update({ order_status: newStatus }).eq("id", orderId);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Updated" }); fetchOrders(); }
+  };
+
+  const updatePaymentStatus = async (orderId: string, newStatus: string) => {
+    const { error } = await supabase.from("orders").update({ payment_status: newStatus }).eq("id", orderId);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+    else { toast({ title: "Payment status updated" }); fetchOrders(); }
+  };
+
+  const sendWhatsAppPayment = (order: any) => {
+    const phone = order.customer_phone?.replace(/\D/g, "");
+    const fullPhone = phone?.startsWith("91") ? phone : `91${phone}`;
+    const message = buildWhatsAppPaymentMessage(order, paymentConfig);
+    window.open(`https://wa.me/${fullPhone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 
   const exportToExcel = () => {
@@ -180,7 +245,7 @@ const AdminOrders = () => {
                   <TableHead>Amount</TableHead>
                   <TableHead>Payment</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Action</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -200,19 +265,26 @@ const AdminOrders = () => {
                       </TableCell>
                       <TableCell>₹{order.total_amount}</TableCell>
                       <TableCell>
-                        <Badge className={paymentColors[order.payment_status] || ""} variant="secondary">
-                          {order.payment_status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={statusColors[order.order_status] || ""} variant="secondary">
-                          {order.order_status?.replace("_", " ")}
-                        </Badge>
+                        <Select value={order.payment_status} onValueChange={(v) => updatePaymentStatus(order.id, v)}>
+                          <SelectTrigger className="w-[110px] h-8 text-xs">
+                            <Badge className={paymentColors[order.payment_status] || ""} variant="secondary">
+                              {order.payment_status}
+                            </Badge>
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Pending</SelectItem>
+                            <SelectItem value="paid">Paid</SelectItem>
+                            <SelectItem value="failed">Failed</SelectItem>
+                            <SelectItem value="refunded">Refunded</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </TableCell>
                       <TableCell>
                         <Select value={order.order_status} onValueChange={(v) => updateOrderStatus(order.id, v)}>
                           <SelectTrigger className="w-[140px] h-8 text-xs">
-                            <SelectValue />
+                            <Badge className={statusColors[order.order_status] || ""} variant="secondary">
+                              {order.order_status?.replace("_", " ")}
+                            </Badge>
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="received">Received</SelectItem>
@@ -223,6 +295,50 @@ const AdminOrders = () => {
                             <SelectItem value="cancelled">Cancelled</SelectItem>
                           </SelectContent>
                         </Select>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-1">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 text-xs bg-[#25D366]/10 border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/20"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                                Pay
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-md">
+                              <DialogHeader>
+                                <DialogTitle className="font-display">Send Payment Request</DialogTitle>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                <div className="rounded-lg bg-muted p-4 text-sm whitespace-pre-wrap font-mono leading-relaxed">
+                                  {buildWhatsAppPaymentMessage(order, paymentConfig)}
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => sendWhatsAppPayment(order)}
+                                    className="flex-1 bg-[#25D366] hover:bg-[#1ebe5d] text-white"
+                                  >
+                                    <MessageCircle className="h-4 w-4 mr-2" />
+                                    Send via WhatsApp
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(buildWhatsAppPaymentMessage(order, paymentConfig));
+                                      toast({ title: "Copied to clipboard" });
+                                    }}
+                                  >
+                                    Copy
+                                  </Button>
+                                </div>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))

@@ -466,11 +466,11 @@ const Checkout = () => {
                       <span>₹{totalAmount}</span>
                     </div>
                     <Button type="submit" className="w-full rounded-xl mt-4" size="lg" disabled={loading}>
-                      {loading ? "Processing..." : `Pay ₹${totalAmount}`}
+                      {loading ? "Placing Order..." : `Place Order — ₹${totalAmount}`}
                     </Button>
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-2">
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      Secure payment powered by Razorpay
+                      Payment details will be shared via WhatsApp
                     </div>
                   </CardContent>
                 </Card>
