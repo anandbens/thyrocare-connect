@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import thyrocareLogo from "@/assets/thyrocare-logo.png";
 
 interface MenuItem {
   id: string;
@@ -58,14 +59,11 @@ const Header = () => {
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b shadow-sm">
         <div className="container flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground font-bold text-lg font-display shadow-md" style={{ background: "var(--gradient-primary)" }}>
-              D
-            </div>
+            <img src={thyrocareLogo} alt="Thyrocare Nagercoil" className="h-10 w-10 rounded-xl object-contain" />
             <div className="hidden sm:block">
               <h1 className="text-lg font-bold font-display leading-tight text-foreground">
-                Daniel Homoeo Clinic
+                Thyrocare Nagercoil
               </h1>
-              <p className="text-xs text-muted-foreground -mt-0.5">Thyrocare Partner</p>
             </div>
           </Link>
 

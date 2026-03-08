@@ -28,7 +28,7 @@ const AdminSettings = () => {
     username: "",
     password: "",
     from_email: "",
-    from_name: "Daniel Homoeo Clinic",
+    from_name: "Thyrocare Nagercoil",
   });
 
   useEffect(() => {
