@@ -84,7 +84,7 @@ const Cart = () => {
                 <span>₹{totalAmount}</span>
               </div>
 
-              <Link to="/checkout">
+              <Link to="/verify-otp">
                 <Button className="w-full rounded-xl mt-4" size="lg">
                   Proceed to Checkout
                   <ArrowRight className="ml-2 h-4 w-4" />
