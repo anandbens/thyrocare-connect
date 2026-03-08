@@ -1,33 +1,48 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Layout from "@/components/layout/Layout";
+import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const Login = () => {
   const { toast } = useToast();
+  const { signIn, signUp, user, isAdmin } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [signupName, setSignupName] = useState("");
+  const [signupPhone, setSignupPhone] = useState("");
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  if (user) {
+    if (isAdmin) navigate("/admin");
+    else navigate("/");
+    return null;
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      toast({ title: "Login functionality", description: "Backend will be connected once Lovable Cloud is enabled." });
-      setLoading(false);
-    }, 1000);
+    const { error } = await signIn(loginEmail, loginPassword);
+    if (error) toast({ title: "Login failed", description: error.message, variant: "destructive" });
+    else toast({ title: "Welcome back!" });
+    setLoading(false);
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      toast({ title: "Sign up functionality", description: "Backend will be connected once Lovable Cloud is enabled." });
-      setLoading(false);
-    }, 1000);
+    const { error } = await signUp(signupEmail, signupPassword, signupName, signupPhone);
+    if (error) toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
+    else toast({ title: "Account created!", description: "Please check your email to verify your account." });
+    setLoading(false);
   };
 
   return (
@@ -53,11 +68,11 @@ const Login = () => {
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="login-email">Email</Label>
-                      <Input id="login-email" type="email" required placeholder="email@example.com" />
+                      <Input id="login-email" type="email" required value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="email@example.com" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="login-password">Password</Label>
-                      <Input id="login-password" type="password" required placeholder="••••••••" />
+                      <Input id="login-password" type="password" required value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" />
                     </div>
                     <Button type="submit" className="w-full rounded-xl" disabled={loading}>
                       {loading ? "Signing in..." : "Sign In"}
@@ -69,19 +84,19 @@ const Login = () => {
                   <form onSubmit={handleSignup} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="signup-name">Full Name</Label>
-                      <Input id="signup-name" required placeholder="Your full name" />
+                      <Input id="signup-name" required value={signupName} onChange={(e) => setSignupName(e.target.value)} placeholder="Your full name" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-phone">Mobile Number</Label>
-                      <Input id="signup-phone" type="tel" required placeholder="+91 XXXXX XXXXX" />
+                      <Input id="signup-phone" type="tel" required value={signupPhone} onChange={(e) => setSignupPhone(e.target.value)} placeholder="+91 XXXXX XXXXX" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-email">Email</Label>
-                      <Input id="signup-email" type="email" required placeholder="email@example.com" />
+                      <Input id="signup-email" type="email" required value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="email@example.com" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="signup-password">Password</Label>
-                      <Input id="signup-password" type="password" required placeholder="••••••••" />
+                      <Input id="signup-password" type="password" required value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} placeholder="••••••••" />
                     </div>
                     <Button type="submit" className="w-full rounded-xl" disabled={loading}>
                       {loading ? "Creating account..." : "Create Account"}
