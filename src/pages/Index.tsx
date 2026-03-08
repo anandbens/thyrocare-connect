@@ -71,7 +71,7 @@ const Index = () => {
                   </Button>
                 </Link>
                 <Link to="/tests?category=health-packages">
-                  <Button size="lg" variant="outline" className="rounded-xl text-base px-8 border-primary-foreground/60 text-primary-foreground hover:bg-primary-foreground/15 backdrop-blur-sm font-semibold">
+                  <Button size="lg" variant="outline" className="rounded-xl text-base px-8 border-primary-foreground/60 bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-semibold shadow-lg">
                     View Packages
                   </Button>
                 </Link>
