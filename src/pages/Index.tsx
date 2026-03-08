@@ -106,9 +106,9 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="py-16 bg-card border-y">
+      <section className="py-20 bg-card border-y">
         <div className="container">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, i) => (
               <motion.div
                 key={feature.title}
@@ -118,12 +118,12 @@ const Index = () => {
                 transition={{ delay: i * 0.1 }}
               >
                 <Card className="text-center border-0 shadow-none bg-transparent">
-                  <CardContent className="pt-6">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <feature.icon className="h-6 w-6 text-primary" />
+                  <CardContent className="pt-8 pb-6">
+                    <div className="w-18 h-18 lg:w-20 lg:h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                      <feature.icon className="h-8 w-8 lg:h-10 lg:w-10 text-primary" />
                     </div>
-                    <h3 className="font-display font-semibold text-foreground mb-1">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                    <h3 className="font-display font-semibold text-lg lg:text-xl text-foreground mb-2">{feature.title}</h3>
+                    <p className="text-base text-muted-foreground">{feature.desc}</p>
                   </CardContent>
                 </Card>
               </motion.div>
