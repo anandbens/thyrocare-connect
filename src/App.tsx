@@ -30,6 +30,7 @@ import AdminOtpLogs from "./pages/admin/AdminOtpLogs";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
+import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,7 @@ const App = () => (
               <Route path="/admin/otp-logs" element={<AdminOtpLogs />} />
               <Route path="/admin/activity-logs" element={<AdminActivityLogs />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
+              <Route path="/admin/email-templates" element={<AdminEmailTemplates />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

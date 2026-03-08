@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Settings, FileText,
-  Image, Menu, ClipboardList, Key, LogOut, Activity, MessageSquareQuote
+  Image, Menu, ClipboardList, Key, LogOut, Activity, MessageSquareQuote, Mail
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -31,6 +31,7 @@ const allMenuItems: MenuItem[] = [
   { title: "Customers", url: "/admin/customers", icon: Users, roles: ["admin"] },
   { title: "OTP Logs", url: "/admin/otp-logs", icon: Key, roles: ["admin"] },
   { title: "Activity Logs", url: "/admin/activity-logs", icon: Activity, roles: ["admin"] },
+  { title: "Email Templates", url: "/admin/email-templates", icon: Mail, roles: ["admin"] },
   { title: "Settings", url: "/admin/settings", icon: Settings, roles: ["admin"] },
 ];
 
