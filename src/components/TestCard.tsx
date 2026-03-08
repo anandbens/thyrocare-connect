@@ -23,7 +23,7 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.4 }}
     >
-      <Card className="group h-full hover:shadow-lg transition-all duration-300 border-border/60 hover:border-primary/30 overflow-hidden">
+      <Card className="group h-full hover:-translate-y-1 transition-all duration-300 border-border/60 hover:border-primary/30 overflow-hidden" style={{ boxShadow: "var(--card-shadow)" }}>
         <CardContent className="p-5 flex flex-col h-full">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
