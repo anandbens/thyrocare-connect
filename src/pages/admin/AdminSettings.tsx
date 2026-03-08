@@ -69,8 +69,9 @@ const AdminSettings = () => {
   return (
     <AdminLayout title="Settings">
       <Tabs defaultValue="payment" className="space-y-6">
-        <TabsList>
+         <TabsList>
           <TabsTrigger value="payment">Payment Gateway</TabsTrigger>
+          <TabsTrigger value="sms">SMS Gateway</TabsTrigger>
           <TabsTrigger value="smtp">SMTP / Email</TabsTrigger>
         </TabsList>
 
