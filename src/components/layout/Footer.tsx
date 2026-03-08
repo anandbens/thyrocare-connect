@@ -1,26 +1,23 @@
 import { Link } from "react-router-dom";
 import { Phone, Mail, MapPin } from "lucide-react";
-import thyrocareLogo from "@/assets/thyrocare-logo.png";
+import thyrocareLogoDark from "@/assets/thyrocare-logo-dark.jpeg";
 
 const Footer = () => {
   return (
-    <footer className="text-background/80" style={{ background: "var(--gradient-premium)" }}>
+    <footer className="bg-[hsl(217,40%,16%)] text-white/80">
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={thyrocareLogo} alt="Thyrocare" className="h-10 w-auto object-contain" />
-              <div>
-                <h3 className="text-lg font-bold font-display text-background">Nagercoil</h3>
-              </div>
+              <img src={thyrocareLogoDark} alt="Thyrocare" className="h-16 w-auto object-contain rounded" />
             </div>
-            <p className="text-sm text-background/60 leading-relaxed">
+            <p className="text-sm text-white/50 leading-relaxed">
               Your trusted partner for accurate and affordable diagnostic testing. NABL accredited lab with ISO certification.
             </p>
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-background mb-4">Quick Links</h4>
+            <h4 className="font-display font-semibold text-white mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm">
               {[
                 { label: "Book a Test", href: "/tests" },
@@ -29,7 +26,7 @@ const Footer = () => {
                 { label: "Contact", href: "/contact" },
               ].map((link) => (
                 <li key={link.href}>
-                  <Link to={link.href} className="text-background/60 hover:text-primary transition-colors">
+                  <Link to={link.href} className="text-white/50 hover:text-[hsl(4,76%,61%)] transition-colors">
                     {link.label}
                   </Link>
                 </li>
@@ -38,11 +35,11 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-background mb-4">Popular Tests</h4>
+            <h4 className="font-display font-semibold text-white mb-4">Popular Tests</h4>
             <ul className="space-y-2 text-sm">
               {["Thyroid Profile", "Complete Blood Count", "Lipid Profile", "Vitamin D", "HbA1c"].map((test) => (
                 <li key={test}>
-                  <Link to="/tests" className="text-background/60 hover:text-primary transition-colors">
+                  <Link to="/tests" className="text-white/50 hover:text-[hsl(4,76%,61%)] transition-colors">
                     {test}
                   </Link>
                 </li>
@@ -51,27 +48,27 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-display font-semibold text-background mb-4">Contact Us</h4>
+            <h4 className="font-display font-semibold text-white mb-4">Contact Us</h4>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
-                <Phone className="h-4 w-4 mt-0.5 text-primary" />
-                <span className="text-background/60">+91 98765 43210</span>
+                <Phone className="h-4 w-4 mt-0.5 text-[hsl(4,76%,61%)]" />
+                <span className="text-white/50">+91 98765 43210</span>
               </li>
               <li className="flex items-start gap-2">
-                <Mail className="h-4 w-4 mt-0.5 text-primary" />
-                <span className="text-background/60">info@danielclinic.com</span>
+                <Mail className="h-4 w-4 mt-0.5 text-[hsl(4,76%,61%)]" />
+                <span className="text-white/50">info@danielclinic.com</span>
               </li>
               <li className="flex items-start gap-2">
-                <MapPin className="h-4 w-4 mt-0.5 text-primary" />
-                <span className="text-background/60">123, Main Road, Madurai, Tamil Nadu - 625001</span>
+                <MapPin className="h-4 w-4 mt-0.5 text-[hsl(4,76%,61%)]" />
+                <span className="text-white/50">123, Main Road, Madurai, Tamil Nadu - 625001</span>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="border-t border-background/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-background/40">
+        <div className="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/30">
           <p>© {new Date().getFullYear()} Thyrocare Nagercoil. All rights reserved.</p>
-          <p>Powered by <a href="https://www.ecoyte.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Ecoyte Business Solutions Private Limited</a></p>
+          <p>Powered by <a href="https://www.ecoyte.com" target="_blank" rel="noopener noreferrer" className="text-[hsl(4,76%,61%)] hover:underline">Ecoyte Business Solutions Private Limited</a></p>
         </div>
       </div>
     </footer>
