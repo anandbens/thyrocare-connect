@@ -1,203 +1,25 @@
+// Database-driven LabTest type matching the lab_tests table
 export interface LabTest {
   id: string;
   name: string;
-  description: string;
-  category: string;
-  parameters: number;
-  parametersList: string[];
+  description: string | null;
+  category_id: string | null;
+  parameters: number | null;
+  parameters_list: string[] | null;
   price: number;
-  originalPrice: number;
-  popular: boolean;
-  turnaround: string;
-  fasting: boolean;
-  sampleType: string;
+  original_price: number;
+  is_popular: boolean | null;
+  turnaround: string | null;
+  fasting_required: boolean | null;
+  sample_type: string | null;
+  is_active: boolean | null;
+  test_categories?: { name: string; id: string } | null;
 }
 
 export interface TestCategory {
   id: string;
   name: string;
-  icon: string;
-  count: number;
+  icon: string | null;
+  sort_order: number | null;
+  is_active: boolean | null;
 }
-
-export const categories: TestCategory[] = [
-  { id: "health-packages", name: "Health Packages", icon: "🏥", count: 12 },
-  { id: "thyroid", name: "Thyroid Profile", icon: "🦋", count: 6 },
-  { id: "diabetes", name: "Diabetes", icon: "🩸", count: 8 },
-  { id: "liver", name: "Liver Function", icon: "🫁", count: 5 },
-  { id: "kidney", name: "Kidney Function", icon: "🫘", count: 4 },
-  { id: "heart", name: "Heart Health", icon: "❤️", count: 6 },
-  { id: "vitamin", name: "Vitamins", icon: "☀️", count: 7 },
-  { id: "allergy", name: "Allergy", icon: "🤧", count: 5 },
-];
-
-export const tests: LabTest[] = [
-  {
-    id: "aarogyam-1.3",
-    name: "Aarogyam 1.3",
-    description: "Complete health checkup package covering thyroid, diabetes, liver, kidney, lipid profile, iron, and vitamin tests.",
-    category: "health-packages",
-    parameters: 72,
-    parametersList: ["CBC", "Thyroid Profile", "Lipid Profile", "Liver Function", "Kidney Function", "Iron Studies", "Vitamin B12", "Vitamin D"],
-    price: 1400,
-    originalPrice: 2800,
-    popular: true,
-    turnaround: "24-48 hours",
-    fasting: true,
-    sampleType: "Blood",
-  },
-  {
-    id: "aarogyam-1.8",
-    name: "Aarogyam 1.8",
-    description: "Advanced health checkup with extended cardiac markers, hormones, and cancer screening markers.",
-    category: "health-packages",
-    parameters: 90,
-    parametersList: ["CBC", "Thyroid Profile", "Lipid Profile", "Liver Function", "Kidney Function", "Cardiac Risk Markers", "Hormone Panel", "Tumor Markers"],
-    price: 2200,
-    originalPrice: 4500,
-    popular: true,
-    turnaround: "24-48 hours",
-    fasting: true,
-    sampleType: "Blood",
-  },
-  {
-    id: "thyroid-profile",
-    name: "Thyroid Profile Total",
-    description: "Complete thyroid function test including T3, T4, and TSH to evaluate thyroid health.",
-    category: "thyroid",
-    parameters: 3,
-    parametersList: ["T3 Total", "T4 Total", "TSH"],
-    price: 350,
-    originalPrice: 700,
-    popular: true,
-    turnaround: "24 hours",
-    fasting: false,
-    sampleType: "Blood",
-  },
-  {
-    id: "thyroid-free",
-    name: "Thyroid Free Profile",
-    description: "Free T3 and Free T4 along with TSH for precise thyroid assessment.",
-    category: "thyroid",
-    parameters: 3,
-    parametersList: ["Free T3", "Free T4", "TSH"],
-    price: 500,
-    originalPrice: 900,
-    popular: false,
-    turnaround: "24 hours",
-    fasting: false,
-    sampleType: "Blood",
-  },
-  {
-    id: "hba1c",
-    name: "HbA1c (Glycated Hemoglobin)",
-    description: "Measures average blood sugar levels over the past 2-3 months for diabetes management.",
-    category: "diabetes",
-    parameters: 1,
-    parametersList: ["HbA1c"],
-    price: 350,
-    originalPrice: 600,
-    popular: true,
-    turnaround: "24 hours",
-    fasting: false,
-    sampleType: "Blood",
-  },
-  {
-    id: "diabetes-panel",
-    name: "Diabetes Screening Panel",
-    description: "Complete diabetes screening with fasting glucose, HbA1c, and insulin levels.",
-    category: "diabetes",
-    parameters: 5,
-    parametersList: ["Fasting Glucose", "Post Prandial Glucose", "HbA1c", "Insulin Fasting", "HOMA-IR"],
-    price: 800,
-    originalPrice: 1500,
-    popular: false,
-    turnaround: "24-48 hours",
-    fasting: true,
-    sampleType: "Blood",
-  },
-  {
-    id: "lipid-profile",
-    name: "Lipid Profile",
-    description: "Comprehensive cholesterol and triglyceride assessment for heart health.",
-    category: "heart",
-    parameters: 8,
-    parametersList: ["Total Cholesterol", "HDL", "LDL", "VLDL", "Triglycerides", "TC/HDL Ratio", "LDL/HDL Ratio", "Non-HDL Cholesterol"],
-    price: 400,
-    originalPrice: 700,
-    popular: true,
-    turnaround: "24 hours",
-    fasting: true,
-    sampleType: "Blood",
-  },
-  {
-    id: "liver-function",
-    name: "Liver Function Test (LFT)",
-    description: "Evaluates liver health by measuring enzymes, proteins, and bilirubin.",
-    category: "liver",
-    parameters: 12,
-    parametersList: ["SGOT", "SGPT", "ALP", "GGT", "Total Bilirubin", "Direct Bilirubin", "Total Protein", "Albumin", "Globulin", "A/G Ratio", "Indirect Bilirubin", "Protein AG Ratio"],
-    price: 450,
-    originalPrice: 800,
-    popular: false,
-    turnaround: "24 hours",
-    fasting: true,
-    sampleType: "Blood",
-  },
-  {
-    id: "kidney-function",
-    name: "Kidney Function Test (KFT)",
-    description: "Comprehensive renal function assessment including creatinine, BUN, and uric acid.",
-    category: "kidney",
-    parameters: 5,
-    parametersList: ["Creatinine", "BUN", "Uric Acid", "BUN/Creatinine Ratio", "eGFR"],
-    price: 400,
-    originalPrice: 750,
-    popular: false,
-    turnaround: "24 hours",
-    fasting: false,
-    sampleType: "Blood",
-  },
-  {
-    id: "vitamin-d",
-    name: "Vitamin D (25-OH)",
-    description: "Measures Vitamin D levels to assess bone health and immune function.",
-    category: "vitamin",
-    parameters: 1,
-    parametersList: ["25-Hydroxy Vitamin D"],
-    price: 600,
-    originalPrice: 1200,
-    popular: true,
-    turnaround: "24 hours",
-    fasting: false,
-    sampleType: "Blood",
-  },
-  {
-    id: "vitamin-b12",
-    name: "Vitamin B12",
-    description: "Evaluates B12 levels essential for nerve function and red blood cell production.",
-    category: "vitamin",
-    parameters: 1,
-    parametersList: ["Vitamin B12"],
-    price: 500,
-    originalPrice: 900,
-    popular: false,
-    turnaround: "24 hours",
-    fasting: false,
-    sampleType: "Blood",
-  },
-  {
-    id: "cbc",
-    name: "Complete Blood Count (CBC)",
-    description: "Evaluates overall health by measuring red cells, white cells, hemoglobin, and platelets.",
-    category: "health-packages",
-    parameters: 24,
-    parametersList: ["Hemoglobin", "RBC Count", "WBC Count", "Platelet Count", "PCV", "MCV", "MCH", "MCHC"],
-    price: 300,
-    originalPrice: 500,
-    popular: true,
-    turnaround: "24 hours",
-    fasting: false,
-    sampleType: "Blood",
-  },
-];

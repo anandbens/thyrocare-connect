@@ -15,7 +15,7 @@ interface TestCardProps {
 const TestCard = ({ test, index = 0 }: TestCardProps) => {
   const { addItem, removeItem, isInCart } = useCart();
   const inCart = isInCart(test.id);
-  const discount = Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100);
+  const discount = Math.round(((test.original_price - test.price) / test.original_price) * 100);
 
   return (
     <motion.div
@@ -27,7 +27,7 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
         <CardContent className="p-5 flex flex-col h-full">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
-              {test.popular && (
+              {test.is_popular && (
                 <Badge className="bg-accent/15 text-accent-foreground border-accent/30 text-xs mb-2">
                   ⭐ Popular
                 </Badge>
@@ -39,7 +39,7 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
               </Link>
             </div>
             <Badge variant="secondary" className="text-sm ml-2 shrink-0">
-              {test.parameters} params
+              {test.parameters || 0} params
             </Badge>
           </div>
 
@@ -50,13 +50,13 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
           <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
             <span className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
-              {test.turnaround}
+              {test.turnaround || "24-48 hours"}
             </span>
             <span className="flex items-center gap-1.5">
               <Droplets className="h-4 w-4" />
-              {test.sampleType}
+              {test.sample_type || "Blood"}
             </span>
-            {test.fasting && (
+            {test.fasting_required && (
               <Badge variant="outline" className="text-xs px-1.5 py-0">
                 Fasting
               </Badge>
@@ -67,7 +67,7 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
             <div>
               <div className="flex items-baseline gap-2">
                 <span className="text-xl font-bold text-foreground">₹{test.price}</span>
-                <span className="text-sm text-muted-foreground line-through">₹{test.originalPrice}</span>
+                <span className="text-sm text-muted-foreground line-through">₹{test.original_price}</span>
               </div>
               <span className="text-xs font-medium text-primary">{discount}% off</span>
             </div>

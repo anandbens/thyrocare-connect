@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Shield, Clock, Home, Award, FlaskConical, HeartPulse, Microscope, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,10 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/layout/Layout";
 import TestCard from "@/components/TestCard";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
-import { tests, categories } from "@/data/tests";
-import { useRef } from "react";
-
-const popularTests = tests.filter((t) => t.popular).slice(0, 6);
+import { supabase } from "@/integrations/supabase/client";
+import { LabTest, TestCategory } from "@/data/tests";
 
 const features = [
   { icon: Home, title: "Home Collection", desc: "Free sample pickup from your doorstep" },
@@ -37,6 +36,23 @@ const Index = () => {
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
+  const [popularTests, setPopularTests] = useState<LabTest[]>([]);
+  const [categories, setCategories] = useState<TestCategory[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const [testsRes, catsRes] = await Promise.all([
+        supabase.from("lab_tests").select("*, test_categories(id, name)").eq("is_active", true).eq("is_popular", true).limit(6),
+        supabase.from("test_categories").select("*").eq("is_active", true).order("sort_order"),
+      ]);
+      setPopularTests((testsRes.data as any[]) || []);
+      setCategories((catsRes.data as any[]) || []);
+    };
+    fetchData();
+  }, []);
+
+  const getCategorySlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
 
   return (
     <Layout>
@@ -155,70 +171,73 @@ const Index = () => {
       </section>
 
       {/* Categories */}
-      <section className="py-20">
-        <div className="container">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-            variants={sectionVariants}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-3">Browse by Category</h2>
-            <p className="text-base lg:text-lg text-muted-foreground">Choose from our wide range of diagnostic tests</p>
-          </motion.div>
-          <motion.div
-            className="grid grid-cols-2 sm:grid-cols-4 gap-5"
-            variants={staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-60px" }}
-          >
-            {categories.map((cat) => (
-              <motion.div key={cat.id} variants={itemVariant}>
-                <Link to={`/tests?category=${cat.id}`}>
-                  <Card className="cursor-pointer hover:border-primary/40 transition-all text-center group hover:-translate-y-1 duration-300" style={{ boxShadow: "var(--card-shadow)" }}>
-                    <CardContent className="pt-8 pb-6">
-                      <span className="text-4xl lg:text-5xl mb-3 block group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
-                      <h3 className="font-medium text-base lg:text-lg text-foreground">{cat.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">{cat.count} tests</p>
-                    </CardContent>
-                  </Card>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
+      {categories.length > 0 && (
+        <section className="py-20">
+          <div className="container">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+              variants={sectionVariants}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-3">Browse by Category</h2>
+              <p className="text-base lg:text-lg text-muted-foreground">Choose from our wide range of diagnostic tests</p>
+            </motion.div>
+            <motion.div
+              className="grid grid-cols-2 sm:grid-cols-4 gap-5"
+              variants={staggerContainer}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-60px" }}
+            >
+              {categories.map((cat) => (
+                <motion.div key={cat.id} variants={itemVariant}>
+                  <Link to={`/tests?category=${getCategorySlug(cat.name)}`}>
+                    <Card className="cursor-pointer hover:border-primary/40 transition-all text-center group hover:-translate-y-1 duration-300" style={{ boxShadow: "var(--card-shadow)" }}>
+                      <CardContent className="pt-8 pb-6">
+                        <span className="text-4xl lg:text-5xl mb-3 block group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
+                        <h3 className="font-medium text-base lg:text-lg text-foreground">{cat.name}</h3>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </motion.div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+      )}
 
       {/* Popular Tests */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-subtle)" }} />
-        <div className="container relative">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-80px" }}
-            variants={sectionVariants}
-            className="flex items-end justify-between mb-12"
-          >
-            <div>
-              <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-2">Popular Tests</h2>
-              <p className="text-base lg:text-lg text-muted-foreground">Most booked tests by our patients</p>
+      {popularTests.length > 0 && (
+        <section className="py-20 relative overflow-hidden">
+          <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-subtle)" }} />
+          <div className="container relative">
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, margin: "-80px" }}
+              variants={sectionVariants}
+              className="flex items-end justify-between mb-12"
+            >
+              <div>
+                <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-2">Popular Tests</h2>
+                <p className="text-base lg:text-lg text-muted-foreground">Most booked tests by our patients</p>
+              </div>
+              <Link to="/tests">
+                <Button variant="ghost" className="text-primary text-base">
+                  View All <ArrowRight className="ml-1 h-5 w-5" />
+                </Button>
+              </Link>
+            </motion.div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {popularTests.map((test, i) => (
+                <TestCard key={test.id} test={test} index={i} />
+              ))}
             </div>
-            <Link to="/tests">
-              <Button variant="ghost" className="text-primary text-base">
-                View All <ArrowRight className="ml-1 h-5 w-5" />
-              </Button>
-            </Link>
-          </motion.div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {popularTests.map((test, i) => (
-              <TestCard key={test.id} test={test} index={i} />
-            ))}
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Testimonials */}
       <TestimonialsSection />

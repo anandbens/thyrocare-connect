@@ -48,7 +48,7 @@ const Cart = () => {
                   <div className="flex items-center gap-4">
                     <div className="text-right">
                       <p className="font-bold text-foreground">₹{item.test.price}</p>
-                      <p className="text-xs text-muted-foreground line-through">₹{item.test.originalPrice}</p>
+                      <p className="text-xs text-muted-foreground line-through">₹{item.test.original_price}</p>
                     </div>
                     <Button
                       variant="ghost"

@@ -1,34 +1,54 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Layout from "@/components/layout/Layout";
 import TestCard from "@/components/TestCard";
-import { tests, categories } from "@/data/tests";
+import { supabase } from "@/integrations/supabase/client";
+import { LabTest, TestCategory } from "@/data/tests";
 
 const Tests = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
+  const [tests, setTests] = useState<LabTest[]>([]);
+  const [categories, setCategories] = useState<TestCategory[]>([]);
+  const [loading, setLoading] = useState(true);
   const activeCategory = searchParams.get("category") || "all";
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const [testsRes, catsRes] = await Promise.all([
+        supabase.from("lab_tests").select("*, test_categories(id, name)").eq("is_active", true).order("created_at"),
+        supabase.from("test_categories").select("*").eq("is_active", true).order("sort_order"),
+      ]);
+      setTests((testsRes.data as any[]) || []);
+      setCategories((catsRes.data as any[]) || []);
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const filtered = useMemo(() => {
     let result = tests;
     if (activeCategory !== "all") {
-      result = result.filter((t) => t.category === activeCategory);
+      const matchingCat = categories.find((c) => c.name.toLowerCase().replace(/\s+/g, "-") === activeCategory);
+      if (matchingCat) {
+        result = result.filter((t) => t.category_id === matchingCat.id);
+      }
     }
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q) ||
-          t.parametersList.some((p) => p.toLowerCase().includes(q))
+          (t.description || "").toLowerCase().includes(q) ||
+          (t.parameters_list || []).some((p) => p.toLowerCase().includes(q))
       );
     }
     return result;
-  }, [activeCategory, search]);
+  }, [activeCategory, search, tests, categories]);
 
   const setCategory = (cat: string) => {
     if (cat === "all") {
@@ -39,15 +59,16 @@ const Tests = () => {
     setSearchParams(searchParams);
   };
 
+  const getCategorySlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
+
   return (
     <Layout>
       <section className="py-10">
         <div className="container">
-          {/* Page header */}
           <div className="mb-8">
             <h1 className="text-3xl font-display font-bold text-foreground mb-2">
               {activeCategory !== "all"
-                ? categories.find((c) => c.id === activeCategory)?.name || "All Tests"
+                ? categories.find((c) => getCategorySlug(c.name) === activeCategory)?.name || "All Tests"
                 : "All Tests & Packages"}
             </h1>
             <p className="text-muted-foreground">
@@ -55,7 +76,6 @@ const Tests = () => {
             </p>
           </div>
 
-          {/* Search & Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -68,7 +88,6 @@ const Tests = () => {
             </div>
           </div>
 
-          {/* Category chips */}
           <div className="flex flex-wrap gap-2 mb-8">
             <Button
               size="sm"
@@ -82,17 +101,18 @@ const Tests = () => {
               <Button
                 key={cat.id}
                 size="sm"
-                variant={activeCategory === cat.id ? "default" : "outline"}
+                variant={activeCategory === getCategorySlug(cat.name) ? "default" : "outline"}
                 className="rounded-full"
-                onClick={() => setCategory(cat.id)}
+                onClick={() => setCategory(getCategorySlug(cat.name))}
               >
                 {cat.icon} {cat.name}
               </Button>
             ))}
           </div>
 
-          {/* Results */}
-          {filtered.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-20 text-muted-foreground">Loading tests...</div>
+          ) : filtered.length > 0 ? (
             <>
               <p className="text-sm text-muted-foreground mb-4">
                 Showing {filtered.length} test{filtered.length !== 1 ? "s" : ""}

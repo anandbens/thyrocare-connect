@@ -1,24 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ShoppingCart, Menu, X, Phone, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+
+interface MenuItem {
+  id: string;
+  label: string;
+  href: string;
+  sort_order: number | null;
+}
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [navLinks, setNavLinks] = useState<MenuItem[]>([]);
   const { itemCount } = useCart();
   const { user, isAdmin } = useAuth();
   const location = useLocation();
 
-  const navLinks = [
-    { label: "Home", href: "/" },
-    { label: "Book a Test", href: "/tests" },
-    { label: "Health Packages", href: "/tests?category=health-packages" },
-    { label: "About", href: "/about" },
-    { label: "Contact", href: "/contact" },
-  ];
+  useEffect(() => {
+    const fetchMenus = async () => {
+      const { data } = await supabase
+        .from("menu_items")
+        .select("id, label, href, sort_order")
+        .eq("is_active", true)
+        .is("parent_id", null)
+        .order("sort_order");
+      setNavLinks((data as MenuItem[]) || []);
+    };
+    fetchMenus();
+  }, []);
 
   const isActive = (href: string) => location.pathname === href;
 
@@ -59,7 +73,7 @@ const Header = () => {
           <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
-                key={link.href}
+                key={link.id}
                 to={link.href}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   isActive(link.href)
@@ -125,7 +139,7 @@ const Header = () => {
           <div className="lg:hidden border-t bg-card p-4 space-y-1">
             {navLinks.map((link) => (
               <Link
-                key={link.href}
+                key={link.id}
                 to={link.href}
                 onClick={() => setMobileOpen(false)}
                 className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
