@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/layout/Layout";
 import TestCard from "@/components/TestCard";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import CategoryCarousel from "@/components/home/CategoryCarousel";
 import { supabase } from "@/integrations/supabase/client";
 import { LabTest, TestCategory } from "@/data/tests";
 
@@ -173,43 +174,8 @@ const Index = () => {
         </motion.div>
       </section>
 
-      {/* Categories */}
-      {categories.length > 0 && (
-        <section className="py-20">
-          <div className="container">
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-80px" }}
-              variants={sectionVariants}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-3">Browse by Category</h2>
-              <p className="text-base lg:text-lg text-muted-foreground">Choose from our wide range of diagnostic tests</p>
-            </motion.div>
-            <motion.div
-              className="grid grid-cols-2 sm:grid-cols-4 gap-5"
-              variants={staggerContainer}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true, margin: "-60px" }}
-            >
-              {categories.map((cat) => (
-                <motion.div key={cat.id} variants={itemVariant}>
-                  <Link to={`/tests?category=${getCategorySlug(cat.name)}`}>
-                    <Card className="cursor-pointer hover:border-primary/40 transition-all text-center group hover:-translate-y-1 duration-300" style={{ boxShadow: "var(--card-shadow)" }}>
-                      <CardContent className="pt-8 pb-6">
-                        <span className="text-4xl lg:text-5xl mb-3 block group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
-                        <h3 className="font-medium text-base lg:text-lg text-foreground">{cat.name}</h3>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-      )}
+      {/* Categories Carousel */}
+      <CategoryCarousel categories={categories} />
 
       {/* Popular Tests */}
       {popularTests.length > 0 && (
