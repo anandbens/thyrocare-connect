@@ -12,11 +12,6 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
 
 const Checkout = () => {
   const { items, totalAmount, totalSavings, clearCart } = useCart();
@@ -225,88 +220,12 @@ const Checkout = () => {
     try {
       const order = await createOrder();
 
-      const { data: razorpayData, error: rzpError } = await supabase.functions.invoke(
-        "create-razorpay-order",
-        {
-          body: {
-            amount: totalAmount,
-            currency: "INR",
-            receipt: order.order_number,
-            notes: { order_id: order.id, customer_name: form.name },
-          },
-        }
-      );
-
-      if (rzpError || !razorpayData?.order_id) {
-        await supabase
-          .from("orders")
-          .update({ payment_type: "cod", payment_status: "pending", order_status: "confirmed" })
-          .eq("id", order.id);
-
-        toast({
-          title: "Order placed successfully! 🎉",
-          description: "Payment gateway is not configured. Order placed as Cash on Collection.",
-        });
-        clearCart();
-        navigate("/dashboard/orders");
-        return;
-      }
-
-      const options = {
-        key: razorpayData.key_id,
-        amount: Math.round(totalAmount * 100),
-        currency: "INR",
-        name: "Thyrocare Nagercoil",
-        description: `Order ${order.order_number}`,
-        order_id: razorpayData.order_id,
-        prefill: {
-          name: form.name,
-          email: form.email,
-          contact: form.phone,
-        },
-        theme: { color: "#0f8a6c" },
-        handler: async (response: any) => {
-          const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
-            "verify-razorpay-payment",
-            {
-              body: {
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                order_id: order.id,
-              },
-            }
-          );
-
-          if (verifyError || !verifyData?.verified) {
-            toast({
-              title: "Payment verification failed",
-              description: "Please contact support with your order number.",
-              variant: "destructive",
-            });
-            return;
-          }
-
-          toast({
-            title: "Payment successful! 🎉",
-            description: `Order ${order.order_number} confirmed.`,
-          });
-          clearCart();
-          navigate("/dashboard/orders");
-        },
-        modal: {
-          ondismiss: () => {
-            toast({
-              title: "Payment cancelled",
-              description: "Your order has been saved. You can pay later from your dashboard.",
-            });
-            setLoading(false);
-          },
-        },
-      };
-
-      const razorpay = new window.Razorpay(options);
-      razorpay.open();
+      toast({
+        title: "Order placed successfully! 🎉",
+        description: `Order ${order.order_number} received. You will receive payment details via WhatsApp shortly.`,
+      });
+      clearCart();
+      navigate("/dashboard/orders");
     } catch (error: any) {
       console.error("Checkout error:", error);
       toast({
@@ -547,11 +466,11 @@ const Checkout = () => {
                       <span>₹{totalAmount}</span>
                     </div>
                     <Button type="submit" className="w-full rounded-xl mt-4" size="lg" disabled={loading}>
-                      {loading ? "Processing..." : `Pay ₹${totalAmount}`}
+                      {loading ? "Placing Order..." : `Place Order — ₹${totalAmount}`}
                     </Button>
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-2">
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      Secure payment powered by Razorpay
+                      Payment details will be shared via WhatsApp
                     </div>
                   </CardContent>
                 </Card>
