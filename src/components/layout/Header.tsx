@@ -23,7 +23,7 @@ const Header = () => {
   return (
     <>
       {/* Top bar */}
-      <div className="bg-primary text-primary-foreground text-sm py-2">
+      <div className="text-primary-foreground text-sm py-2" style={{ background: "var(--gradient-primary)" }}>
         <div className="container flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Phone className="h-3.5 w-3.5" />
@@ -42,7 +42,7 @@ const Header = () => {
       <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b shadow-sm">
         <div className="container flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg font-display">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground font-bold text-lg font-display shadow-md" style={{ background: "var(--gradient-primary)" }}>
               D
             </div>
             <div className="hidden sm:block">

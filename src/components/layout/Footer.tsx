@@ -3,12 +3,12 @@ import { Phone, Mail, MapPin } from "lucide-react";
 
 const Footer = () => {
   return (
-    <footer className="bg-foreground text-background/80">
+    <footer className="text-background/80" style={{ background: "var(--gradient-premium)" }}>
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg font-display">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-primary-foreground font-bold text-lg font-display" style={{ background: "var(--gradient-primary)" }}>
                 D
               </div>
               <div>
