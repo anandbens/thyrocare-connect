@@ -47,10 +47,10 @@ const AdminSettings = () => {
     const fetch = async () => {
       const { data } = await supabase.from("site_settings").select("*");
       if (data) {
-        const paymentSetting = data.find((s) => s.setting_key === "payment_gateway");
+        const paymentCollectionSetting = data.find((s) => s.setting_key === "payment_collection");
         const smtpSetting = data.find((s) => s.setting_key === "smtp_config");
         const smsSetting = data.find((s) => s.setting_key === "sms_gateway");
-        if (paymentSetting?.setting_value) setPayment(paymentSetting.setting_value as any);
+        if (paymentCollectionSetting?.setting_value) setPaymentCollection(paymentCollectionSetting.setting_value as any);
         if (smtpSetting?.setting_value) setSmtp(smtpSetting.setting_value as any);
         if (smsSetting?.setting_value) setSms(smsSetting.setting_value as any);
       }
