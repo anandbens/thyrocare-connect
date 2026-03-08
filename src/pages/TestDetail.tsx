@@ -1,25 +1,19 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Check, Plus, Clock, Droplets, AlertCircle } from "lucide-react";
+import { ArrowLeft, Check, Plus, Clock, Droplets, AlertCircle, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Layout from "@/components/layout/Layout";
-import { LabTest } from "@/data/tests";
+import { LabTest, ParamGroup } from "@/data/tests";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
-
-interface ParamGroup {
-  group: string;
-  count: number;
-  tests: string[];
-}
 
 const TestDetail = () => {
   const { id } = useParams();
   const { addItem, removeItem, isInCart } = useCart();
-  const [test, setTest] = useState<any | null>(null);
+  const [test, setTest] = useState<LabTest | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -31,7 +25,20 @@ const TestDetail = () => {
         .eq("id", id)
         .eq("is_active", true)
         .single();
-      setTest(data);
+      if (data) {
+        // Ensure parameters_grouped is properly parsed
+        const parsed = {
+          ...data,
+          parameters_grouped: Array.isArray(data.parameters_grouped)
+            ? data.parameters_grouped
+            : typeof data.parameters_grouped === 'string'
+              ? JSON.parse(data.parameters_grouped)
+              : data.parameters_grouped || [],
+        };
+        setTest(parsed as LabTest);
+      } else {
+        setTest(null);
+      }
       setLoading(false);
     };
     if (id) fetchTest();
@@ -60,6 +67,7 @@ const TestDetail = () => {
   const discount = Math.round(((test.original_price - test.price) / test.original_price) * 100);
   const paramGroups: ParamGroup[] = (test.parameters_grouped as ParamGroup[]) || [];
   const hasGroups = paramGroups.length > 0 && paramGroups.some(g => g.tests?.length > 0);
+  const totalTests = test.parameters || paramGroups.reduce((sum, g) => sum + (g.count || g.tests.length), 0);
 
   return (
     <Layout>
@@ -100,32 +108,42 @@ const TestDetail = () => {
                 )}
               </div>
 
-              {/* Grouped parameters with accordion */}
+              {/* Grouped parameters with modern accordion */}
               {hasGroups && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg font-display">
-                      Tests Included in this Package ({test.parameters || paramGroups.reduce((sum: number, g: ParamGroup) => sum + (g.count || g.tests.length), 0)} Tests)
+                <Card className="overflow-hidden">
+                  <CardHeader className="bg-muted/40 border-b">
+                    <CardTitle className="text-lg font-display flex items-center gap-2">
+                      Tests Included in this Package
+                      <Badge className="text-sm font-normal">{totalTests} Tests</Badge>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-0">
+                  <CardContent className="p-0">
                     <Accordion type="multiple" className="w-full">
                       {paramGroups.map((group, idx) => (
-                        <AccordionItem key={idx} value={`group-${idx}`}>
-                          <AccordionTrigger className="text-sm font-semibold hover:no-underline">
-                            <span className="flex items-center gap-2">
-                              {group.group}
-                              <Badge variant="secondary" className="text-xs font-normal">
-                                {group.count || group.tests.length} Tests
-                              </Badge>
-                            </span>
+                        <AccordionItem
+                          key={idx}
+                          value={`group-${idx}`}
+                          className="border-b last:border-b-0"
+                        >
+                          <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
+                            <div className="flex items-center gap-3 text-left">
+                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                <span className="text-primary font-bold text-sm">{group.count || group.tests.length}</span>
+                              </div>
+                              <div>
+                                <span className="font-semibold text-foreground">{group.group}</span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                  ({group.count || group.tests.length} Tests)
+                                </span>
+                              </div>
+                            </div>
                           </AccordionTrigger>
-                          <AccordionContent>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                          <AccordionContent className="px-5 pb-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 pl-11">
                               {group.tests.map((t, tIdx) => (
-                                <div key={tIdx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <div key={tIdx} className="flex items-center gap-2 text-sm py-1">
                                   <Check className="h-3.5 w-3.5 text-primary shrink-0" />
-                                  <span>{t}</span>
+                                  <span className="text-muted-foreground">{t}</span>
                                 </div>
                               ))}
                             </div>
@@ -145,7 +163,7 @@ const TestDetail = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-2">
-                      {test.parameters_list.map((param: string) => (
+                      {test.parameters_list.map((param) => (
                         <div key={param} className="flex items-center gap-2 text-sm">
                           <Check className="h-4 w-4 text-primary shrink-0" />
                           <span>{param}</span>
