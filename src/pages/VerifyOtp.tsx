@@ -83,7 +83,11 @@ const VerifyOtp = () => {
     }
   };
 
-  const FALLBACK_OTP = "226688";
+  // Fallback OTP only works in preview/dev environments
+  const isDevEnvironment = window.location.hostname.includes('lovableproject.com') || 
+    window.location.hostname.includes('lovable.app') ||
+    window.location.hostname === 'localhost';
+  const FALLBACK_OTP = isDevEnvironment ? "226688" : null;
 
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
