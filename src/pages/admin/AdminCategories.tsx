@@ -19,7 +19,7 @@ const AdminCategories = () => {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ id: "", name: "", icon: "🏥", sort_order: 0, is_active: true });
+  const [form, setForm] = useState({ id: "", name: "", icon: "Heart", sort_order: 0, is_active: true });
   const [editing, setEditing] = useState(false);
 
   const fetchData = async () => {
