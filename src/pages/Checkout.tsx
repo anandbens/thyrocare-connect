@@ -162,21 +162,52 @@ const Checkout = () => {
   };
 
   const createOrder = async () => {
+    // Server-side validation first
+    const validationPayload = {
+      customer_name: form.name,
+      customer_email: form.email,
+      customer_phone: form.phone,
+      age: form.age ? parseInt(form.age) : null,
+      gender: form.gender,
+      address1: form.address1,
+      district: form.district,
+      area: form.area,
+      pincode: form.pincode,
+      preferred_date: form.date || null,
+      preferred_time: form.time,
+      total_amount: totalAmount,
+      items: items.map((item) => ({
+        test_id: item.test.id,
+        test_name: item.test.name,
+        price: item.test.price,
+        original_price: item.test.original_price,
+      })),
+    };
+
+    const { data: validation, error: valError } = await supabase.functions.invoke("validate-order", {
+      body: validationPayload,
+    });
+
+    if (valError || (validation && !validation.valid)) {
+      const errorMessages = validation?.errors?.join(", ") || valError?.message || "Validation failed";
+      throw new Error(errorMessages);
+    }
+
     const orderNumber = `DHC-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
 
     const { data: order, error: orderError } = await supabase
       .from("orders")
       .insert({
         order_number: orderNumber,
-        customer_name: form.name,
-        customer_email: form.email,
+        customer_name: form.name.trim(),
+        customer_email: form.email.trim(),
         customer_phone: form.phone,
         alt_phone: form.altPhone || null,
         age: form.age ? parseInt(form.age) : null,
         gender: form.gender,
-        address1: form.address1,
-        address2: form.address2 || null,
-        landmark: form.landmark || null,
+        address1: form.address1.trim(),
+        address2: form.address2?.trim() || null,
+        landmark: form.landmark?.trim() || null,
         district: form.district,
         area: form.area,
         state: form.state,
