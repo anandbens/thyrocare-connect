@@ -91,7 +91,7 @@ const Checkout = () => {
       test_id: item.test.id,
       test_name: item.test.name,
       price: item.test.price,
-      original_price: item.test.originalPrice,
+      original_price: item.test.original_price,
     }));
 
     await supabase.from("order_items").insert(orderItems);
