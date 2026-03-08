@@ -1,16 +1,42 @@
 import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Check, Plus, Clock, Droplets, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/layout/Layout";
-import { tests } from "@/data/tests";
+import { LabTest } from "@/data/tests";
 import { useCart } from "@/context/CartContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const TestDetail = () => {
   const { id } = useParams();
-  const test = tests.find((t) => t.id === id);
   const { addItem, removeItem, isInCart } = useCart();
+  const [test, setTest] = useState<LabTest | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTest = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("lab_tests")
+        .select("*, test_categories(id, name)")
+        .eq("id", id)
+        .eq("is_active", true)
+        .single();
+      setTest(data as any);
+      setLoading(false);
+    };
+    if (id) fetchTest();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container py-20 text-center text-muted-foreground">Loading...</div>
+      </Layout>
+    );
+  }
 
   if (!test) {
     return (
@@ -26,7 +52,7 @@ const TestDetail = () => {
   }
 
   const inCart = isInCart(test.id);
-  const discount = Math.round(((test.originalPrice - test.price) / test.originalPrice) * 100);
+  const discount = Math.round(((test.original_price - test.price) / test.original_price) * 100);
 
   return (
     <Layout>
@@ -40,7 +66,7 @@ const TestDetail = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               <div>
-                {test.popular && (
+                {test.is_popular && (
                   <Badge className="bg-accent/15 text-accent-foreground border-accent/30 mb-3">⭐ Popular</Badge>
                 )}
                 <h1 className="text-3xl font-display font-bold text-foreground mb-3">{test.name}</h1>
@@ -50,13 +76,13 @@ const TestDetail = () => {
               <div className="flex flex-wrap gap-4 text-sm">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  <span>Reports in {test.turnaround}</span>
+                  <span>Reports in {test.turnaround || "24-48 hours"}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Droplets className="h-4 w-4" />
-                  <span>{test.sampleType} sample</span>
+                  <span>{test.sample_type || "Blood"} sample</span>
                 </div>
-                {test.fasting && (
+                {test.fasting_required && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <AlertCircle className="h-4 w-4" />
                     <span>Fasting required (10-12 hours)</span>
@@ -64,34 +90,35 @@ const TestDetail = () => {
                 )}
               </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg font-display">Parameters Included ({test.parameters})</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-2">
-                    {test.parametersList.map((param) => (
-                      <div key={param} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-primary shrink-0" />
-                        <span>{param}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              {(test.parameters_list && test.parameters_list.length > 0) && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-display">Parameters Included ({test.parameters || test.parameters_list.length})</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-2">
+                      {test.parameters_list.map((param) => (
+                        <div key={param} className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-primary shrink-0" />
+                          <span>{param}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
-            {/* Pricing sidebar */}
             <div>
               <Card className="sticky top-24 border-primary/20">
                 <CardContent className="p-6 space-y-5">
                   <div>
                     <div className="flex items-baseline gap-2">
                       <span className="text-3xl font-bold text-foreground">₹{test.price}</span>
-                      <span className="text-lg text-muted-foreground line-through">₹{test.originalPrice}</span>
+                      <span className="text-lg text-muted-foreground line-through">₹{test.original_price}</span>
                     </div>
                     <Badge variant="secondary" className="mt-2 text-primary font-medium">
-                      {discount}% off — You save ₹{test.originalPrice - test.price}
+                      {discount}% off — You save ₹{test.original_price - test.price}
                     </Badge>
                   </div>
 
