@@ -91,10 +91,10 @@ const Index = () => {
                     ].map((item) => (
                       <div
                         key={item.label}
-                        className="bg-muted/50 rounded-2xl p-5 flex flex-col items-center gap-3 text-center"
+                        className="bg-muted/50 rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
                       >
-                        <item.icon className={`h-8 w-8 ${item.color}`} />
-                        <span className="text-sm font-medium text-foreground">{item.label}</span>
+                        <item.icon className={`h-10 w-10 ${item.color}`} />
+                        <span className="text-base font-medium text-foreground">{item.label}</span>
                       </div>
                     ))}
                   </div>
