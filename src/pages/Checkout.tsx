@@ -142,7 +142,7 @@ const Checkout = () => {
         key: razorpayData.key_id,
         amount: Math.round(totalAmount * 100),
         currency: "INR",
-        name: "Daniel Homoeo Clinic",
+        name: "Thyrocare Nagercoil",
         description: `Order ${order.order_number}`,
         order_id: razorpayData.order_id,
         prefill: {

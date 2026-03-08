@@ -16,9 +16,9 @@ const About = () => {
       <section className="py-16">
         <div className="container max-w-4xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-4xl font-display font-bold text-foreground mb-6">About Daniel Homoeo Clinic</h1>
+            <h1 className="text-4xl font-display font-bold text-foreground mb-6">About Thyrocare Nagercoil</h1>
             <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-              Daniel Homoeo Clinic is an authorized Thyrocare collection centre in Madurai, dedicated to providing 
+              Thyrocare Nagercoil is an authorized Thyrocare collection centre in Nagercoil, dedicated to providing 
               affordable and accurate diagnostic testing services. With over 15 years of healthcare experience, 
               we bring world-class lab testing to your doorstep.
             </p>
