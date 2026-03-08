@@ -21,6 +21,15 @@ const AdminSettings = () => {
     is_sandbox: true,
   });
 
+  // SMS Gateway settings
+  const [sms, setSms] = useState({
+    gateway_url: "",
+    api_key: "",
+    entity_id: "",
+    sender_id: "",
+    template_id: "",
+  });
+
   // SMTP settings
   const [smtp, setSmtp] = useState({
     host: "",
@@ -37,8 +46,10 @@ const AdminSettings = () => {
       if (data) {
         const paymentSetting = data.find((s) => s.setting_key === "payment_gateway");
         const smtpSetting = data.find((s) => s.setting_key === "smtp_config");
+        const smsSetting = data.find((s) => s.setting_key === "sms_gateway");
         if (paymentSetting?.setting_value) setPayment(paymentSetting.setting_value as any);
         if (smtpSetting?.setting_value) setSmtp(smtpSetting.setting_value as any);
+        if (smsSetting?.setting_value) setSms(smsSetting.setting_value as any);
       }
     };
     fetch();
@@ -58,8 +69,9 @@ const AdminSettings = () => {
   return (
     <AdminLayout title="Settings">
       <Tabs defaultValue="payment" className="space-y-6">
-        <TabsList>
+         <TabsList>
           <TabsTrigger value="payment">Payment Gateway</TabsTrigger>
+          <TabsTrigger value="sms">SMS Gateway</TabsTrigger>
           <TabsTrigger value="smtp">SMTP / Email</TabsTrigger>
         </TabsList>
 
@@ -93,6 +105,42 @@ const AdminSettings = () => {
               </div>
               <Button onClick={() => saveSetting("payment_gateway", payment)} disabled={loading}>
                 <Save className="h-4 w-4 mr-2" /> Save Payment Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="sms">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display">SMS Gateway Configuration</CardTitle>
+              <CardDescription>Configure SMS gateway for sending OTPs via SMS</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Gateway API URL *</Label>
+                  <Input value={sms.gateway_url} onChange={(e) => setSms({ ...sms, gateway_url: e.target.value })} placeholder="https://api.smsprovider.com/send" />
+                </div>
+                <div className="space-y-2">
+                  <Label>API Key *</Label>
+                  <Input type="password" value={sms.api_key} onChange={(e) => setSms({ ...sms, api_key: e.target.value })} placeholder="Your SMS API key" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Entity ID</Label>
+                  <Input value={sms.entity_id} onChange={(e) => setSms({ ...sms, entity_id: e.target.value })} placeholder="DLT Entity ID" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sender ID</Label>
+                  <Input value={sms.sender_id} onChange={(e) => setSms({ ...sms, sender_id: e.target.value })} placeholder="THYROC" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Template ID</Label>
+                  <Input value={sms.template_id} onChange={(e) => setSms({ ...sms, template_id: e.target.value })} placeholder="DLT Template ID" />
+                </div>
+              </div>
+              <Button onClick={() => saveSetting("sms_gateway", sms)} disabled={loading}>
+                <Save className="h-4 w-4 mr-2" /> Save SMS Settings
               </Button>
             </CardContent>
           </Card>

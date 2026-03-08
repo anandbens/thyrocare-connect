@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,11 +23,16 @@ const Checkout = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const verifiedPhone = (location.state as any)?.verifiedPhone || "";
+
   const [form, setForm] = useState({
     name: "",
     email: "",
-    phone: "",
+    phone: verifiedPhone,
     altPhone: "",
     age: "",
     gender: "male",
@@ -42,16 +47,126 @@ const Checkout = () => {
     time: "morning",
   });
 
+  const [isExistingUser, setIsExistingUser] = useState(false);
+
+  // Auto-populate from existing orders if phone matches
+  useEffect(() => {
+    if (!verifiedPhone) return;
+    const fetchExistingData = async () => {
+      const { data: existingOrders } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("customer_phone", verifiedPhone)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (existingOrders && existingOrders.length > 0) {
+        const o = existingOrders[0];
+        setIsExistingUser(true);
+        setForm((prev) => ({
+          ...prev,
+          name: o.customer_name || prev.name,
+          email: o.customer_email || prev.email,
+          phone: verifiedPhone,
+          altPhone: o.alt_phone || "",
+          age: o.age?.toString() || "",
+          gender: o.gender || "male",
+          address1: o.address1 || "",
+          address2: o.address2 || "",
+          landmark: o.landmark || "",
+          district: o.district || "",
+          area: o.area || "",
+          state: o.state || "Tamil Nadu",
+          pincode: o.pincode || "",
+        }));
+      }
+    };
+    fetchExistingData();
+  }, [verifiedPhone]);
+
   const districtAreas: Record<string, string[]> = {
     Nagercoil: ["Nagercoil Town", "Kottar", "Vadasery", "Eraniel", "Colachel", "Marthandam", "Thuckalay", "Kuzhithurai"],
     Tirunelveli: ["Tirunelveli Town", "Palayamkottai", "Melapalayam", "Sankarankovil", "Ambasamudram", "Tenkasi", "Cheranmahadevi", "Nanguneri"],
   };
 
-  const update = (field: string, value: string) =>
+  const update = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const validatePhone10 = (val: string) => /^[6-9]\d{9}$/.test(val);
+  const validatePincode = (val: string) => /^\d{6}$/.test(val);
+  const validateAge = (val: string) => /^\d{1,2}$/.test(val) && parseInt(val) >= 1 && parseInt(val) <= 99;
+
+  const getISTNow = () => {
+    const now = new Date();
+    // Convert to IST (UTC+5:30)
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istNow = new Date(now.getTime() + (istOffset - now.getTimezoneOffset() * 60 * 1000));
+    return istNow;
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!form.name.trim()) newErrors.name = "Full name is required";
+    if (!form.email.trim()) newErrors.email = "Email is required";
+    
+    if (!validatePhone10(form.phone)) {
+      newErrors.phone = "Enter a valid 10-digit mobile number starting with 6-9";
+    }
+    
+    if (form.altPhone && !validatePhone10(form.altPhone)) {
+      newErrors.altPhone = "Enter a valid 10-digit mobile number starting with 6-9";
+    }
+
+    if (form.altPhone && form.phone === form.altPhone) {
+      newErrors.altPhone = "Alternative number must be different from primary number";
+    }
+
+    if (!validateAge(form.age)) {
+      newErrors.age = "Age must be 1-99 (1 or 2 digits)";
+    }
+
+    if (!form.address1.trim()) newErrors.address1 = "Address is required";
+    if (!form.district) newErrors.district = "District is required";
+    if (!form.area) newErrors.area = "Area is required";
+
+    if (!validatePincode(form.pincode)) {
+      newErrors.pincode = "Pincode must be exactly 6 digits";
+    }
+
+    if (!form.date) {
+      newErrors.date = "Preferred date is required";
+    } else {
+      const istNow = getISTNow();
+      const today = istNow.toISOString().slice(0, 10);
+      if (form.date < today) {
+        newErrors.date = "Date cannot be earlier than today";
+      }
+    }
+
+    // Validate time slot - if date is today, check if time slot has passed
+    if (form.date && !newErrors.date) {
+      const istNow = getISTNow();
+      const today = istNow.toISOString().slice(0, 10);
+      if (form.date === today) {
+        const currentHour = istNow.getHours();
+        if (form.time === "morning" && currentHour >= 9) {
+          newErrors.time = "Morning slot (7-9 AM) has passed for today";
+        } else if (form.time === "forenoon" && currentHour >= 11) {
+          newErrors.time = "Forenoon slot (9-11 AM) has passed for today";
+        } else if (form.time === "afternoon" && currentHour >= 14) {
+          newErrors.time = "Afternoon slot (12-2 PM) has passed for today";
+        }
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const createOrder = async () => {
-    // Create order in database first
     const orderNumber = `DHC-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 10000).toString().padStart(4, "0")}`;
 
     const { data: order, error: orderError } = await supabase
@@ -85,7 +200,6 @@ const Checkout = () => {
 
     if (orderError || !order) throw new Error(orderError?.message || "Failed to create order");
 
-    // Insert order items
     const orderItems = items.map((item) => ({
       order_id: order.id,
       test_id: item.test.id,
@@ -95,7 +209,6 @@ const Checkout = () => {
     }));
 
     await supabase.from("order_items").insert(orderItems);
-
     return order;
   };
 
@@ -103,12 +216,15 @@ const Checkout = () => {
     e.preventDefault();
     if (items.length === 0) return;
 
+    if (!validateForm()) {
+      toast({ title: "Please fix the errors", description: "Check the highlighted fields.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
-      // Create order in DB
       const order = await createOrder();
 
-      // Create Razorpay order via edge function
       const { data: razorpayData, error: rzpError } = await supabase.functions.invoke(
         "create-razorpay-order",
         {
@@ -122,7 +238,6 @@ const Checkout = () => {
       );
 
       if (rzpError || !razorpayData?.order_id) {
-        // Fallback: mark as COD if payment gateway not configured
         await supabase
           .from("orders")
           .update({ payment_type: "cod", payment_status: "pending", order_status: "confirmed" })
@@ -137,7 +252,6 @@ const Checkout = () => {
         return;
       }
 
-      // Open Razorpay checkout
       const options = {
         key: razorpayData.key_id,
         amount: Math.round(totalAmount * 100),
@@ -152,7 +266,6 @@ const Checkout = () => {
         },
         theme: { color: "#0f8a6c" },
         handler: async (response: any) => {
-          // Verify payment
           const { data: verifyData, error: verifyError } = await supabase.functions.invoke(
             "verify-razorpay-payment",
             {
@@ -176,7 +289,7 @@ const Checkout = () => {
 
           toast({
             title: "Payment successful! 🎉",
-            description: `Order ${order.order_number} confirmed. You'll receive a confirmation email.`,
+            description: `Order ${order.order_number} confirmed.`,
           });
           clearCart();
           navigate("/dashboard/orders");
@@ -211,6 +324,8 @@ const Checkout = () => {
     return null;
   }
 
+  const todayIST = getISTNow().toISOString().slice(0, 10);
+
   return (
     <Layout>
       <section className="py-10">
@@ -221,6 +336,12 @@ const Checkout = () => {
           </Link>
 
           <h1 className="text-3xl font-display font-bold text-foreground mb-8">Checkout</h1>
+
+          {isExistingUser && (
+            <div className="mb-4 p-3 rounded-lg bg-primary/10 text-primary text-sm">
+              ✅ Welcome back! We've pre-filled your details from your previous order. You can update the alternative number and address if needed.
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             <div className="grid lg:grid-cols-3 gap-8">
@@ -233,22 +354,52 @@ const Checkout = () => {
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name *</Label>
                       <Input id="name" required value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Enter full name" />
+                      {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Mobile Number *</Label>
-                      <Input id="phone" required type="tel" value={form.phone} onChange={(e) => update("phone", e.target.value)} placeholder="+91 XXXXX XXXXX" />
+                      <Input
+                        id="phone"
+                        required
+                        type="tel"
+                        maxLength={10}
+                        value={form.phone}
+                        onChange={(e) => update("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                        placeholder="10-digit mobile number"
+                        readOnly={!!verifiedPhone}
+                        className={verifiedPhone ? "bg-muted" : ""}
+                      />
+                      {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email *</Label>
                       <Input id="email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@example.com" />
+                      {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="altPhone">Alternative Mobile Number</Label>
-                      <Input id="altPhone" type="tel" value={form.altPhone} onChange={(e) => update("altPhone", e.target.value)} placeholder="+91 XXXXX XXXXX" />
+                      <Input
+                        id="altPhone"
+                        type="tel"
+                        maxLength={10}
+                        value={form.altPhone}
+                        onChange={(e) => update("altPhone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                        placeholder="10-digit mobile number"
+                      />
+                      {errors.altPhone && <p className="text-sm text-destructive">{errors.altPhone}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="age">Age *</Label>
-                      <Input id="age" required type="number" min="1" max="120" value={form.age} onChange={(e) => update("age", e.target.value)} placeholder="Age" />
+                      <Input
+                        id="age"
+                        required
+                        type="text"
+                        maxLength={2}
+                        value={form.age}
+                        onChange={(e) => update("age", e.target.value.replace(/\D/g, "").slice(0, 2))}
+                        placeholder="Age (1-99)"
+                      />
+                      {errors.age && <p className="text-sm text-destructive">{errors.age}</p>}
                     </div>
                     <div className="space-y-2 sm:col-span-2">
                       <Label>Gender *</Label>
@@ -273,6 +424,7 @@ const Checkout = () => {
                       <div className="space-y-2">
                         <Label htmlFor="address1">Address Line 1 *</Label>
                         <Input id="address1" required value={form.address1} onChange={(e) => update("address1", e.target.value)} placeholder="Door No, Street Name" />
+                        {errors.address1 && <p className="text-sm text-destructive">{errors.address1}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="address2">Address Line 2</Label>
@@ -313,6 +465,7 @@ const Checkout = () => {
                           <option value="Nagercoil">Nagercoil</option>
                           <option value="Tirunelveli">Tirunelveli</option>
                         </select>
+                        {errors.district && <p className="text-sm text-destructive">{errors.district}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="area">Area *</Label>
@@ -329,14 +482,24 @@ const Checkout = () => {
                             <option key={area} value={area}>{area}</option>
                           ))}
                         </select>
+                        {errors.area && <p className="text-sm text-destructive">{errors.area}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="pincode">Pincode *</Label>
-                        <Input id="pincode" required value={form.pincode} onChange={(e) => update("pincode", e.target.value)} placeholder="629001" />
+                        <Input
+                          id="pincode"
+                          required
+                          maxLength={6}
+                          value={form.pincode}
+                          onChange={(e) => update("pincode", e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          placeholder="629001"
+                        />
+                        {errors.pincode && <p className="text-sm text-destructive">{errors.pincode}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="date">Preferred Date *</Label>
-                        <Input id="date" required type="date" value={form.date} onChange={(e) => update("date", e.target.value)} />
+                        <Input id="date" required type="date" min={todayIST} value={form.date} onChange={(e) => update("date", e.target.value)} />
+                        {errors.date && <p className="text-sm text-destructive">{errors.date}</p>}
                       </div>
                       <div className="space-y-2">
                         <Label>Time Slot *</Label>
@@ -349,6 +512,7 @@ const Checkout = () => {
                           <option value="forenoon">Forenoon (9-11 AM)</option>
                           <option value="afternoon">Afternoon (12-2 PM)</option>
                         </select>
+                        {errors.time && <p className="text-sm text-destructive">{errors.time}</p>}
                       </div>
                     </div>
                   </CardContent>
