@@ -14,6 +14,10 @@ import Login from "./pages/Login";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/dashboard/Dashboard";
+import UserOrders from "./pages/dashboard/UserOrders";
+import UserReports from "./pages/dashboard/UserReports";
+import UserProfile from "./pages/dashboard/UserProfile";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminTests from "./pages/admin/AdminTests";
@@ -46,6 +50,12 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              {/* User Dashboard Routes */}
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard/orders" element={<UserOrders />} />
+              <Route path="/dashboard/orders/:id" element={<UserOrders />} />
+              <Route path="/dashboard/reports" element={<UserReports />} />
+              <Route path="/dashboard/profile" element={<UserProfile />} />
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/orders" element={<AdminOrders />} />

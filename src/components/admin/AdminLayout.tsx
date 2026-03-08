@@ -6,10 +6,11 @@ import { Navigate } from "react-router-dom";
 interface AdminLayoutProps {
   children: React.ReactNode;
   title: string;
+  requiredRole?: "admin" | "payment_reviewer" | "content_moderator";
 }
 
-const AdminLayout = ({ children, title }: AdminLayoutProps) => {
-  const { user, isAdmin, loading } = useAuth();
+const AdminLayout = ({ children, title, requiredRole }: AdminLayoutProps) => {
+  const { user, isAdmin, hasRole, loading } = useAuth();
 
   if (loading) {
     return (
@@ -20,7 +21,10 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  
+  // Check role access: admin has full access, otherwise check specific role
+  const hasAccess = isAdmin || (requiredRole && hasRole(requiredRole));
+  if (!hasAccess) return <Navigate to="/dashboard" replace />;
 
   return (
     <SidebarProvider>

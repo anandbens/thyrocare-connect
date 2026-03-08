@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingCart, Menu, X, Phone, User } from "lucide-react";
+import { ShoppingCart, Menu, X, Phone, User, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/context/CartContext";
+import { useAuth } from "@/context/AuthContext";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { itemCount } = useCart();
+  const { user, isAdmin } = useAuth();
   const location = useLocation();
 
   const navLinks = [
@@ -72,12 +74,31 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Link to="/login">
-              <Button variant="ghost" size="sm" className="hidden sm:flex gap-2">
-                <User className="h-4 w-4" />
-                Login
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link to="/admin">
+                    <Button variant="ghost" size="sm" className="hidden sm:flex gap-2">
+                      <LayoutDashboard className="h-4 w-4" />
+                      Admin
+                    </Button>
+                  </Link>
+                )}
+                <Link to="/dashboard">
+                  <Button variant="ghost" size="sm" className="hidden sm:flex gap-2">
+                    <User className="h-4 w-4" />
+                    Dashboard
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <Link to="/login">
+                <Button variant="ghost" size="sm" className="hidden sm:flex gap-2">
+                  <User className="h-4 w-4" />
+                  Login
+                </Button>
+              </Link>
+            )}
             <Link to="/cart" className="relative">
               <Button variant="outline" size="icon" className="relative">
                 <ShoppingCart className="h-4 w-4" />
@@ -116,12 +137,31 @@ const Header = () => {
                 {link.label}
               </Link>
             ))}
-            <Link to="/login" onClick={() => setMobileOpen(false)}>
-              <Button className="w-full mt-2" size="sm">
-                <User className="h-4 w-4 mr-2" />
-                Login / Sign Up
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to="/dashboard" onClick={() => setMobileOpen(false)}>
+                  <Button className="w-full mt-2" size="sm" variant="outline">
+                    <User className="h-4 w-4 mr-2" />
+                    My Dashboard
+                  </Button>
+                </Link>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setMobileOpen(false)}>
+                    <Button className="w-full mt-2" size="sm">
+                      <LayoutDashboard className="h-4 w-4 mr-2" />
+                      Admin Panel
+                    </Button>
+                  </Link>
+                )}
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setMobileOpen(false)}>
+                <Button className="w-full mt-2" size="sm">
+                  <User className="h-4 w-4 mr-2" />
+                  Login / Sign Up
+                </Button>
+              </Link>
+            )}
           </div>
         )}
       </header>

@@ -12,32 +12,45 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 
-const menuItems = [
-  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
-  { title: "Orders", url: "/admin/orders", icon: ShoppingCart },
-  { title: "Tests", url: "/admin/tests", icon: Package },
-  { title: "Categories", url: "/admin/categories", icon: ClipboardList },
-  { title: "Banners", url: "/admin/banners", icon: Image },
-  { title: "Testimonials", url: "/admin/testimonials", icon: MessageSquareQuote },
-  { title: "Menus", url: "/admin/menus", icon: Menu },
-  { title: "Pages", url: "/admin/pages", icon: FileText },
-  { title: "Customers", url: "/admin/customers", icon: Users },
-  { title: "OTP Logs", url: "/admin/otp-logs", icon: Key },
-  { title: "Activity Logs", url: "/admin/activity-logs", icon: Activity },
-  { title: "Settings", url: "/admin/settings", icon: Settings },
+type MenuItem = {
+  title: string;
+  url: string;
+  icon: any;
+  roles: ("admin" | "payment_reviewer" | "content_moderator")[];
+};
+
+const allMenuItems: MenuItem[] = [
+  { title: "Dashboard", url: "/admin", icon: LayoutDashboard, roles: ["admin", "payment_reviewer", "content_moderator"] },
+  { title: "Orders", url: "/admin/orders", icon: ShoppingCart, roles: ["admin", "payment_reviewer"] },
+  { title: "Tests", url: "/admin/tests", icon: Package, roles: ["admin", "content_moderator"] },
+  { title: "Categories", url: "/admin/categories", icon: ClipboardList, roles: ["admin", "content_moderator"] },
+  { title: "Banners", url: "/admin/banners", icon: Image, roles: ["admin", "content_moderator"] },
+  { title: "Testimonials", url: "/admin/testimonials", icon: MessageSquareQuote, roles: ["admin", "content_moderator"] },
+  { title: "Menus", url: "/admin/menus", icon: Menu, roles: ["admin", "content_moderator"] },
+  { title: "Pages", url: "/admin/pages", icon: FileText, roles: ["admin", "content_moderator"] },
+  { title: "Customers", url: "/admin/customers", icon: Users, roles: ["admin"] },
+  { title: "OTP Logs", url: "/admin/otp-logs", icon: Key, roles: ["admin"] },
+  { title: "Activity Logs", url: "/admin/activity-logs", icon: Activity, roles: ["admin"] },
+  { title: "Settings", url: "/admin/settings", icon: Settings, roles: ["admin"] },
 ];
 
 export function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin, hasRole } = useAuth();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
     navigate("/login");
   };
+
+  // Filter menu items based on user roles
+  const menuItems = allMenuItems.filter((item) => {
+    if (isAdmin) return true;
+    return item.roles.some((role) => hasRole(role));
+  });
 
   return (
     <Sidebar collapsible="icon">
