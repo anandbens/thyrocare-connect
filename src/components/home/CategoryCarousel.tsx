@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useRef, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, icons } from "lucide-react";
 import { motion } from "framer-motion";
 import { TestCategory } from "@/data/tests";
 
