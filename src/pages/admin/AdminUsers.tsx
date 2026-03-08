@@ -97,9 +97,9 @@ const AdminUsers = () => {
     await supabase.from("user_roles").delete().eq("user_id", userId);
 
     // Insert new roles
-    const rolesToInsert = editingRoles.length > 0 ? editingRoles : ["user"];
+    const rolesToInsert = editingRoles.length > 0 ? editingRoles : (["user"] as AppRole[]);
     const { error } = await supabase.from("user_roles").insert(
-      rolesToInsert.map((role) => ({ user_id: userId, role }))
+      rolesToInsert.map((role) => ({ user_id: userId, role: role as AppRole }))
     );
 
     if (error) {
