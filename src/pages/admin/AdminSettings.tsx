@@ -46,8 +46,10 @@ const AdminSettings = () => {
       if (data) {
         const paymentSetting = data.find((s) => s.setting_key === "payment_gateway");
         const smtpSetting = data.find((s) => s.setting_key === "smtp_config");
+        const smsSetting = data.find((s) => s.setting_key === "sms_gateway");
         if (paymentSetting?.setting_value) setPayment(paymentSetting.setting_value as any);
         if (smtpSetting?.setting_value) setSmtp(smtpSetting.setting_value as any);
+        if (smsSetting?.setting_value) setSms(smsSetting.setting_value as any);
       }
     };
     fetch();
