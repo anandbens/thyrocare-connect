@@ -9,9 +9,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <img src={thyrocareLogo} alt="Thyrocare Nagercoil" className="h-10 w-10 rounded-xl object-contain" />
+              <img src={thyrocareLogo} alt="Thyrocare" className="h-10 w-auto object-contain" />
               <div>
-                <h3 className="text-lg font-bold font-display text-background">Thyrocare Nagercoil</h3>
+                <h3 className="text-lg font-bold font-display text-background">Nagercoil</h3>
               </div>
             </div>
             <p className="text-sm text-background/60 leading-relaxed">
