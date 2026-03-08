@@ -20,13 +20,24 @@ const Checkout = () => {
     name: "",
     email: "",
     phone: "",
+    altPhone: "",
     age: "",
     gender: "male",
-    address: "",
+    address1: "",
+    address2: "",
+    landmark: "",
+    district: "",
+    area: "",
+    state: "Tamil Nadu",
     pincode: "",
     date: "",
     time: "morning",
   });
+
+  const districtAreas: Record<string, string[]> = {
+    Nagercoil: ["Nagercoil Town", "Kottar", "Vadasery", "Eraniel", "Colachel", "Marthandam", "Thuckalay", "Kuzhithurai"],
+    Tirunelveli: ["Tirunelveli Town", "Palayamkottai", "Melapalayam", "Sankarankovil", "Ambasamudram", "Tenkasi", "Cheranmahadevi", "Nanguneri"],
+  };
 
   const update = (field: string, value: string) =>
     setForm((prev) => ({ ...prev, [field]: value }));
