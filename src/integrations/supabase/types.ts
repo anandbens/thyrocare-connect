@@ -134,9 +134,11 @@ export type Database = {
           name: string
           original_price: number
           parameters: number | null
+          parameters_grouped: Json | null
           parameters_list: string[] | null
           price: number
           sample_type: string | null
+          test_code: string | null
           turnaround: string | null
           updated_at: string
         }
@@ -151,9 +153,11 @@ export type Database = {
           name: string
           original_price: number
           parameters?: number | null
+          parameters_grouped?: Json | null
           parameters_list?: string[] | null
           price: number
           sample_type?: string | null
+          test_code?: string | null
           turnaround?: string | null
           updated_at?: string
         }
@@ -168,9 +172,11 @@ export type Database = {
           name?: string
           original_price?: number
           parameters?: number | null
+          parameters_grouped?: Json | null
           parameters_list?: string[] | null
           price?: number
           sample_type?: string | null
+          test_code?: string | null
           turnaround?: string | null
           updated_at?: string
         }

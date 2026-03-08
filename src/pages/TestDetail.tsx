@@ -4,15 +4,22 @@ import { ArrowLeft, Check, Plus, Clock, Droplets, AlertCircle } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import Layout from "@/components/layout/Layout";
 import { LabTest } from "@/data/tests";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
 
+interface ParamGroup {
+  group: string;
+  count: number;
+  tests: string[];
+}
+
 const TestDetail = () => {
   const { id } = useParams();
   const { addItem, removeItem, isInCart } = useCart();
-  const [test, setTest] = useState<LabTest | null>(null);
+  const [test, setTest] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -24,7 +31,7 @@ const TestDetail = () => {
         .eq("id", id)
         .eq("is_active", true)
         .single();
-      setTest(data as any);
+      setTest(data);
       setLoading(false);
     };
     if (id) fetchTest();
@@ -43,9 +50,7 @@ const TestDetail = () => {
       <Layout>
         <div className="container py-20 text-center">
           <h1 className="text-2xl font-display font-bold mb-4">Test not found</h1>
-          <Link to="/tests">
-            <Button>Back to Tests</Button>
-          </Link>
+          <Link to="/tests"><Button>Back to Tests</Button></Link>
         </div>
       </Layout>
     );
@@ -53,6 +58,8 @@ const TestDetail = () => {
 
   const inCart = isInCart(test.id);
   const discount = Math.round(((test.original_price - test.price) / test.original_price) * 100);
+  const paramGroups: ParamGroup[] = (test.parameters_grouped as ParamGroup[]) || [];
+  const hasGroups = paramGroups.length > 0 && paramGroups.some(g => g.tests?.length > 0);
 
   return (
     <Layout>
@@ -69,7 +76,10 @@ const TestDetail = () => {
                 {test.is_popular && (
                   <Badge className="bg-accent/15 text-accent-foreground border-accent/30 mb-3">⭐ Popular</Badge>
                 )}
-                <h1 className="text-3xl font-display font-bold text-foreground mb-3">{test.name}</h1>
+                <h1 className="text-3xl font-display font-bold text-foreground mb-2">{test.name}</h1>
+                {test.test_code && (
+                  <p className="text-sm text-muted-foreground font-mono mb-3">Test Code: {test.test_code}</p>
+                )}
                 <p className="text-muted-foreground leading-relaxed">{test.description}</p>
               </div>
 
@@ -90,14 +100,52 @@ const TestDetail = () => {
                 )}
               </div>
 
-              {(test.parameters_list && test.parameters_list.length > 0) && (
+              {/* Grouped parameters with accordion */}
+              {hasGroups && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg font-display">
+                      Tests Included in this Package ({test.parameters || paramGroups.reduce((sum: number, g: ParamGroup) => sum + (g.count || g.tests.length), 0)} Tests)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <Accordion type="multiple" className="w-full">
+                      {paramGroups.map((group, idx) => (
+                        <AccordionItem key={idx} value={`group-${idx}`}>
+                          <AccordionTrigger className="text-sm font-semibold hover:no-underline">
+                            <span className="flex items-center gap-2">
+                              {group.group}
+                              <Badge variant="secondary" className="text-xs font-normal">
+                                {group.count || group.tests.length} Tests
+                              </Badge>
+                            </span>
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                              {group.tests.map((t, tIdx) => (
+                                <div key={tIdx} className="flex items-center gap-2 text-sm text-muted-foreground">
+                                  <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                                  <span>{t}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Flat parameters fallback */}
+              {!hasGroups && test.parameters_list && test.parameters_list.length > 0 && (
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg font-display">Parameters Included ({test.parameters || test.parameters_list.length})</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 gap-2">
-                      {test.parameters_list.map((param) => (
+                      {test.parameters_list.map((param: string) => (
                         <div key={param} className="flex items-center gap-2 text-sm">
                           <Check className="h-4 w-4 text-primary shrink-0" />
                           <span>{param}</span>
@@ -129,21 +177,15 @@ const TestDetail = () => {
                     onClick={() => (inCart ? removeItem(test.id) : addItem(test))}
                   >
                     {inCart ? (
-                      <>
-                        <Check className="h-4 w-4 mr-2" /> Added to Cart
-                      </>
+                      <><Check className="h-4 w-4 mr-2" /> Added to Cart</>
                     ) : (
-                      <>
-                        <Plus className="h-4 w-4 mr-2" /> Add to Cart
-                      </>
+                      <><Plus className="h-4 w-4 mr-2" /> Add to Cart</>
                     )}
                   </Button>
 
                   {inCart && (
                     <Link to="/cart">
-                      <Button className="w-full rounded-xl" variant="secondary" size="lg">
-                        Go to Cart
-                      </Button>
+                      <Button className="w-full rounded-xl" variant="secondary" size="lg">Go to Cart</Button>
                     </Link>
                   )}
 
