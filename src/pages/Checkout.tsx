@@ -95,6 +95,10 @@ const Checkout = () => {
                       <Input id="email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@example.com" />
                     </div>
                     <div className="space-y-2">
+                      <Label htmlFor="altPhone">Alternative Mobile Number</Label>
+                      <Input id="altPhone" type="tel" value={form.altPhone} onChange={(e) => update("altPhone", e.target.value)} placeholder="+91 XXXXX XXXXX" />
+                    </div>
+                    <div className="space-y-2">
                       <Label htmlFor="age">Age *</Label>
                       <Input id="age" required type="number" min="1" max="120" value={form.age} onChange={(e) => update("age", e.target.value)} placeholder="Age" />
                     </div>
