@@ -121,14 +121,70 @@ const Checkout = () => {
                     <CardTitle className="font-display">Collection Details</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address *</Label>
-                      <Textarea id="address" required value={form.address} onChange={(e) => update("address", e.target.value)} placeholder="Full address for home sample collection" />
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="address1">Address Line 1 *</Label>
+                        <Input id="address1" required value={form.address1} onChange={(e) => update("address1", e.target.value)} placeholder="Door No, Street Name" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="address2">Address Line 2</Label>
+                        <Input id="address2" value={form.address2} onChange={(e) => update("address2", e.target.value)} placeholder="Colony, Area" />
+                      </div>
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="landmark">Landmark</Label>
+                        <Input id="landmark" value={form.landmark} onChange={(e) => update("landmark", e.target.value)} placeholder="Near temple, opposite school, etc." />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="state">State *</Label>
+                        <select
+                          id="state"
+                          value={form.state}
+                          disabled
+                          className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm cursor-not-allowed"
+                        >
+                          <option value="Tamil Nadu">Tamil Nadu</option>
+                        </select>
+                      </div>
                     </div>
                     <div className="grid sm:grid-cols-3 gap-4">
                       <div className="space-y-2">
+                        <Label htmlFor="district">District *</Label>
+                        <select
+                          id="district"
+                          required
+                          value={form.district}
+                          onChange={(e) => {
+                            update("district", e.target.value);
+                            update("area", "");
+                          }}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        >
+                          <option value="">Select District</option>
+                          <option value="Nagercoil">Nagercoil</option>
+                          <option value="Tirunelveli">Tirunelveli</option>
+                        </select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="area">Area *</Label>
+                        <select
+                          id="area"
+                          required
+                          value={form.area}
+                          onChange={(e) => update("area", e.target.value)}
+                          disabled={!form.district}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:bg-muted disabled:cursor-not-allowed"
+                        >
+                          <option value="">Select Area</option>
+                          {form.district && districtAreas[form.district]?.map((area) => (
+                            <option key={area} value={area}>{area}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor="pincode">Pincode *</Label>
-                        <Input id="pincode" required value={form.pincode} onChange={(e) => update("pincode", e.target.value)} placeholder="625001" />
+                        <Input id="pincode" required value={form.pincode} onChange={(e) => update("pincode", e.target.value)} placeholder="629001" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="date">Preferred Date *</Label>
