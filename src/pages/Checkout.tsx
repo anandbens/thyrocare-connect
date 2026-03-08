@@ -268,6 +268,7 @@ const Checkout = () => {
         description: `Order ${order.order_number} received. You will receive payment details via WhatsApp shortly.`,
       });
       clearCart();
+      localStorage.removeItem("checkout_form");
       navigate("/dashboard/orders");
     } catch (error: any) {
       console.error("Checkout error:", error);
