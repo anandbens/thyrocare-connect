@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/layout/Layout";
 import TestCard from "@/components/TestCard";
 import TestimonialsSection from "@/components/home/TestimonialsSection";
+import CategoryCarousel from "@/components/home/CategoryCarousel";
 import { supabase } from "@/integrations/supabase/client";
 import { LabTest, TestCategory } from "@/data/tests";
 
