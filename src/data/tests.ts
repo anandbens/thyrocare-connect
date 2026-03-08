@@ -1,11 +1,20 @@
 // Database-driven LabTest type matching the lab_tests table
+
+export interface ParamGroup {
+  group: string;
+  count: number;
+  tests: string[];
+}
+
 export interface LabTest {
   id: string;
   name: string;
+  test_code: string | null;
   description: string | null;
   category_id: string | null;
   parameters: number | null;
   parameters_list: string[] | null;
+  parameters_grouped: ParamGroup[] | null;
   price: number;
   original_price: number;
   is_popular: boolean | null;
