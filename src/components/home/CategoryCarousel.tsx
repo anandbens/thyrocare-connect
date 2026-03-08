@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { useRef, useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, icons } from "lucide-react";
 import { motion } from "framer-motion";
 import { TestCategory } from "@/data/tests";
 
@@ -92,8 +92,11 @@ const CategoryCarousel = ({ categories }: CategoryCarouselProps) => {
                   transition={{ duration: 0.4, delay: idx * 0.05 }}
                   className={`flex-shrink-0 w-[150px] sm:w-[170px] h-[170px] sm:h-[190px] rounded-2xl bg-gradient-to-br ${pastelGradients[idx % pastelGradients.length]} flex flex-col items-center justify-center gap-3 cursor-pointer hover:-translate-y-1 hover:shadow-lg transition-all duration-300 border border-border/50 group/card`}
                 >
-                  <span className="text-5xl sm:text-6xl group-hover/card:scale-110 transition-transform duration-300 drop-shadow-sm">
-                    {cat.icon}
+                  <span className="text-5xl sm:text-6xl group-hover/card:scale-110 transition-transform duration-300 drop-shadow-sm flex items-center justify-center">
+                    {(() => {
+                      const IconComp = icons[cat.icon as keyof typeof icons];
+                      return IconComp ? <IconComp className="h-10 w-10 sm:h-12 sm:w-12 text-foreground" /> : cat.icon;
+                    })()}
                   </span>
                   <span className="text-sm sm:text-base font-semibold text-foreground text-center px-3 leading-tight">
                     {cat.name}
