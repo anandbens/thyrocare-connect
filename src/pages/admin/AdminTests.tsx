@@ -136,11 +136,8 @@ const AdminTests = () => {
   const exportToExcel = () => {
     const headers = ["Name", "Code", "Category", "Price", "MRP", "Parameters", "Popular", "Active"];
     const rows = filtered.map((t) => [t.name, t.test_code || "", t.test_categories?.name || "", t.price, t.original_price, t.parameters, t.is_popular ? "Yes" : "No", t.is_active ? "Yes" : "No"]);
-    const csv = [headers, ...rows].map((r) => r.map((c: any) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `tests-${new Date().toISOString().split("T")[0]}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    const csv = buildSafeCsv(headers, rows);
+    downloadCsv(csv, `tests-${new Date().toISOString().split("T")[0]}.csv`);
   };
 
   return (

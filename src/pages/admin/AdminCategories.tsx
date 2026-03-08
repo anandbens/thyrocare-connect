@@ -51,11 +51,8 @@ const AdminCategories = () => {
   const exportToExcel = () => {
     const headers = ["Icon", "Name", "Sort Order", "Active"];
     const rows = items.map((c) => [c.icon, c.name, c.sort_order, c.is_active ? "Yes" : "No"]);
-    const csv = [headers, ...rows].map((r) => r.map((c: any) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = `categories-${new Date().toISOString().split("T")[0]}.csv`; a.click();
-    URL.revokeObjectURL(url);
+    const csv = buildSafeCsv(headers, rows);
+    downloadCsv(csv, `categories-${new Date().toISOString().split("T")[0]}.csv`);
   };
 
   return (
