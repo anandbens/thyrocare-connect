@@ -47,13 +47,13 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
             {test.description}
           </p>
 
-          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
-            <span className="flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
+            <span className="flex items-center gap-1.5">
+              <Clock className="h-4 w-4" />
               {test.turnaround}
             </span>
-            <span className="flex items-center gap-1">
-              <Droplets className="h-3.5 w-3.5" />
+            <span className="flex items-center gap-1.5">
+              <Droplets className="h-4 w-4" />
               {test.sampleType}
             </span>
             {test.fasting && (
