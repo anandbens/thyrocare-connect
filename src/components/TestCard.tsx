@@ -33,17 +33,17 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
                 </Badge>
               )}
               <Link to={`/tests/${test.id}`}>
-                <h3 className="font-display font-semibold text-foreground group-hover:text-primary transition-colors leading-snug">
+                <h3 className="font-display font-semibold text-base lg:text-lg text-foreground group-hover:text-primary transition-colors leading-snug">
                   {test.name}
                 </h3>
               </Link>
             </div>
-            <Badge variant="secondary" className="text-xs ml-2 shrink-0">
+            <Badge variant="secondary" className="text-sm ml-2 shrink-0">
               {test.parameters} params
             </Badge>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-1">
+          <p className="text-sm lg:text-base text-muted-foreground mb-4 line-clamp-2 flex-1">
             {test.description}
           </p>
 
