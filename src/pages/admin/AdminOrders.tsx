@@ -163,19 +163,13 @@ const AdminOrders = () => {
       o.customer_name,
       o.customer_phone,
       o.customer_email,
-      o.order_items?.map((i: any) => i.test_name).join("; "),
+      o.order_items?.map((i: any) => i.test_name).join("; ") || "",
       o.total_amount,
-      o.payment_status,
-      o.order_status,
+      o.payment_status || "",
+      o.order_status || "",
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((c: any) => `"${c}"`).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `orders-${new Date().toISOString().split("T")[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const csv = buildSafeCsv(headers, rows);
+    downloadCsv(csv, `orders-${new Date().toISOString().split("T")[0]}.csv`);
   };
 
   return (
