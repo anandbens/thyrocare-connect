@@ -91,10 +91,10 @@ const Index = () => {
                     ].map((item) => (
                       <div
                         key={item.label}
-                        className="bg-muted/50 rounded-2xl p-5 flex flex-col items-center gap-3 text-center"
+                        className="bg-muted/50 rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
                       >
-                        <item.icon className={`h-8 w-8 ${item.color}`} />
-                        <span className="text-sm font-medium text-foreground">{item.label}</span>
+                        <item.icon className={`h-10 w-10 ${item.color}`} />
+                        <span className="text-base font-medium text-foreground">{item.label}</span>
                       </div>
                     ))}
                   </div>
@@ -106,9 +106,9 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="py-16 bg-card border-y">
+      <section className="py-20 bg-card border-y">
         <div className="container">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, i) => (
               <motion.div
                 key={feature.title}
@@ -118,12 +118,12 @@ const Index = () => {
                 transition={{ delay: i * 0.1 }}
               >
                 <Card className="text-center border-0 shadow-none bg-transparent">
-                  <CardContent className="pt-6">
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                      <feature.icon className="h-6 w-6 text-primary" />
+                  <CardContent className="pt-8 pb-6">
+                    <div className="w-18 h-18 lg:w-20 lg:h-20 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
+                      <feature.icon className="h-8 w-8 lg:h-10 lg:w-10 text-primary" />
                     </div>
-                    <h3 className="font-display font-semibold text-foreground mb-1">{feature.title}</h3>
-                    <p className="text-sm text-muted-foreground">{feature.desc}</p>
+                    <h3 className="font-display font-semibold text-lg lg:text-xl text-foreground mb-2">{feature.title}</h3>
+                    <p className="text-base text-muted-foreground">{feature.desc}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -133,13 +133,13 @@ const Index = () => {
       </section>
 
       {/* Categories */}
-      <section className="py-16">
+      <section className="py-20">
         <div className="container">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-3">Browse by Category</h2>
-            <p className="text-muted-foreground">Choose from our wide range of diagnostic tests</p>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-3">Browse by Category</h2>
+            <p className="text-base lg:text-lg text-muted-foreground">Choose from our wide range of diagnostic tests</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.id}
@@ -150,10 +150,10 @@ const Index = () => {
               >
                 <Link to={`/tests?category=${cat.id}`}>
                   <Card className="cursor-pointer hover:border-primary/40 hover:shadow-md transition-all text-center">
-                    <CardContent className="pt-6 pb-4">
-                      <span className="text-3xl mb-2 block">{cat.icon}</span>
-                      <h3 className="font-medium text-sm text-foreground">{cat.name}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">{cat.count} tests</p>
+                    <CardContent className="pt-8 pb-6">
+                      <span className="text-4xl lg:text-5xl mb-3 block">{cat.icon}</span>
+                      <h3 className="font-medium text-base lg:text-lg text-foreground">{cat.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{cat.count} tests</p>
                     </CardContent>
                   </Card>
                 </Link>
@@ -164,16 +164,16 @@ const Index = () => {
       </section>
 
       {/* Popular Tests */}
-      <section className="py-16 bg-muted/30">
+      <section className="py-20 bg-muted/30">
         <div className="container">
-          <div className="flex items-end justify-between mb-10">
+          <div className="flex items-end justify-between mb-12">
             <div>
-              <h2 className="text-3xl font-display font-bold text-foreground mb-2">Popular Tests</h2>
-              <p className="text-muted-foreground">Most booked tests by our patients</p>
+              <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-2">Popular Tests</h2>
+              <p className="text-base lg:text-lg text-muted-foreground">Most booked tests by our patients</p>
             </div>
             <Link to="/tests">
-              <Button variant="ghost" className="text-primary">
-                View All <ArrowRight className="ml-1 h-4 w-4" />
+              <Button variant="ghost" className="text-primary text-base">
+                View All <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
             </Link>
           </div>
