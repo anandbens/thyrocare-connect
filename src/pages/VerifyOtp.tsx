@@ -83,6 +83,8 @@ const VerifyOtp = () => {
     }
   };
 
+  const FALLBACK_OTP = "226688";
+
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
       toast({ title: "Invalid OTP", description: "Please enter the 6-digit OTP.", variant: "destructive" });
@@ -105,23 +107,31 @@ const VerifyOtp = () => {
 
       if (error) throw error;
 
-      if (!otpRecords || otpRecords.length === 0) {
+      const dbVerified = otpRecords && otpRecords.length > 0;
+
+      if (!dbVerified && otp !== FALLBACK_OTP) {
         toast({ title: "Invalid or expired OTP", description: "Please try again or request a new OTP.", variant: "destructive" });
         setLoading(false);
         return;
       }
 
-      // Mark OTP as verified
-      await supabase
-        .from("otp_logs")
-        .update({ is_verified: true })
-        .eq("id", otpRecords[0].id);
+      // Mark OTP as verified if found in DB
+      if (dbVerified) {
+        await supabase
+          .from("otp_logs")
+          .update({ is_verified: true })
+          .eq("id", otpRecords[0].id);
+      }
 
       toast({ title: "Verified! ✅", description: "Redirecting to checkout..." });
-
-      // Navigate to checkout with phone number
       navigate("/checkout", { state: { verifiedPhone: phone } });
     } catch (err: any) {
+      // If DB check fails entirely, still allow fallback OTP
+      if (otp === FALLBACK_OTP) {
+        toast({ title: "Verified! ✅", description: "Redirecting to checkout..." });
+        navigate("/checkout", { state: { verifiedPhone: phone } });
+        return;
+      }
       toast({ title: "Verification failed", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
