@@ -14,11 +14,14 @@ const AdminSettings = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  // Payment settings
-  const [payment, setPayment] = useState({
-    razorpay_key_id: "",
-    razorpay_key_secret: "",
-    is_sandbox: true,
+  // Payment collection settings
+  const [paymentCollection, setPaymentCollection] = useState({
+    upi_id: "",
+    phonepe_number: "",
+    gpay_number: "",
+    account_holder_name: "",
+    business_name: "Thyrocare Nagercoil",
+    whatsapp_number: "",
   });
 
   // SMS Gateway settings
