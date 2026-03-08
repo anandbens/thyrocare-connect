@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { Download, Search, Filter } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminPaginationControls from "@/components/admin/AdminPaginationControls";
+import { useAdminPagination } from "@/hooks/useAdminPagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -79,6 +81,8 @@ const AdminOrders = () => {
     });
   }, [orders, search, statusFilter, paymentFilter, dateFrom, dateTo]);
 
+  const { paginatedData, currentPage, totalPages, totalItems, setCurrentPage, rowsPerPage } = useAdminPagination(filtered);
+
   const updateOrderStatus = async (orderId: string, newStatus: string) => {
     const { error } = await supabase.from("orders").update({ order_status: newStatus }).eq("id", orderId);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -120,13 +124,12 @@ const AdminOrders = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Filters */}
           <div className="grid grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
             <div className="col-span-2 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search name, phone, email, order#" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+              <Input placeholder="Search name, phone, email, order#" value={search} onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }} className="pl-10" />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
               <SelectTrigger><SelectValue placeholder="Order Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
@@ -138,7 +141,7 @@ const AdminOrders = () => {
                 <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+            <Select value={paymentFilter} onValueChange={(v) => { setPaymentFilter(v); setCurrentPage(1); }}>
               <SelectTrigger><SelectValue placeholder="Payment" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Payments</SelectItem>
@@ -148,7 +151,7 @@ const AdminOrders = () => {
                 <SelectItem value="refunded">Refunded</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={daysFilter} onValueChange={handleDaysFilter}>
+            <Select value={daysFilter} onValueChange={(v) => { handleDaysFilter(v); setCurrentPage(1); }}>
               <SelectTrigger><SelectValue placeholder="Days" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Time</SelectItem>
@@ -159,11 +162,11 @@ const AdminOrders = () => {
               </SelectContent>
             </Select>
             <div className="flex gap-2">
-              <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDaysFilter("all"); }} placeholder="From" />
+              <Input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDaysFilter("all"); setCurrentPage(1); }} placeholder="From" />
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground mb-3">{filtered.length} orders</p>
+          <p className="text-sm text-muted-foreground mb-3">{totalItems} orders</p>
 
           <div className="rounded-md border overflow-x-auto">
             <Table>
@@ -183,10 +186,10 @@ const AdminOrders = () => {
               <TableBody>
                 {loading ? (
                   <TableRow><TableCell colSpan={9} className="text-center py-8">Loading...</TableCell></TableRow>
-                ) : filtered.length === 0 ? (
+                ) : paginatedData.length === 0 ? (
                   <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No orders found</TableCell></TableRow>
                 ) : (
-                  filtered.map((order) => (
+                  paginatedData.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">{order.order_number}</TableCell>
                       <TableCell>{new Date(order.created_at).toLocaleDateString()}</TableCell>
@@ -227,6 +230,14 @@ const AdminOrders = () => {
               </TableBody>
             </Table>
           </div>
+
+          <AdminPaginationControls
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={totalItems}
+            rowsPerPage={rowsPerPage}
+            onPageChange={setCurrentPage}
+          />
         </CardContent>
       </Card>
     </AdminLayout>
