@@ -49,6 +49,7 @@ const App = () => (
               <Route path="/tests/:id" element={<TestDetail />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/verify-otp" element={<VerifyOtp />} />
               <Route path="/login" element={<Login />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
