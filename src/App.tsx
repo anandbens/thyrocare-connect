@@ -25,6 +25,7 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminOtpLogs from "./pages/admin/AdminOtpLogs";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
               <Route path="/admin/tests" element={<AdminTests />} />
               <Route path="/admin/categories" element={<AdminCategories />} />
               <Route path="/admin/banners" element={<AdminBanners />} />
+              <Route path="/admin/testimonials" element={<AdminTestimonials />} />
               <Route path="/admin/menus" element={<AdminMenus />} />
               <Route path="/admin/pages" element={<AdminPages />} />
               <Route path="/admin/customers" element={<AdminCustomers />} />

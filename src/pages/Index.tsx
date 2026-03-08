@@ -1,11 +1,13 @@
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Shield, Clock, Home, Award, FlaskConical, HeartPulse, Microscope, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import Layout from "@/components/layout/Layout";
 import TestCard from "@/components/TestCard";
+import TestimonialsSection from "@/components/home/TestimonialsSection";
 import { tests, categories } from "@/data/tests";
+import { useRef } from "react";
 
 const popularTests = tests.filter((t) => t.popular).slice(0, 6);
 
@@ -16,14 +18,33 @@ const features = [
   { icon: Award, title: "Affordable Prices", desc: "Up to 50% off on all health packages" },
 ];
 
+const sectionVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
+};
+
+const staggerContainer = {
+  visible: { transition: { staggerChildren: 0.1 } },
+};
+
+const itemVariant = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+};
+
 const Index = () => {
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-16 lg:py-28" style={{ background: "var(--hero-gradient)" }}>
+      <section ref={heroRef} className="relative overflow-hidden py-16 lg:py-28" style={{ background: "var(--hero-gradient)" }}>
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_80%,hsl(168_72%_50%/0.15),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,hsl(200_60%_50%/0.1),transparent_50%)]" />
-        <div className="container relative">
+        <motion.div className="container relative" style={{ y: heroY, opacity: heroOpacity }}>
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
@@ -84,17 +105,17 @@ const Index = () => {
                 <div className="relative bg-primary-foreground/10 backdrop-blur-lg rounded-3xl p-8 border border-primary-foreground/20">
                   <div className="grid grid-cols-2 gap-4">
                     {[
-                      { icon: HeartPulse, label: "Heart Health", color: "text-red-300" },
-                      { icon: FlaskConical, label: "Blood Tests", color: "text-primary-foreground" },
-                      { icon: Microscope, label: "Lab Reports", color: "text-accent" },
-                      { icon: Shield, label: "NABL Certified", color: "text-emerald-300" },
+                      { icon: HeartPulse, label: "Heart Health", gradient: "from-red-500/20 to-red-600/10", iconColor: "text-red-200" },
+                      { icon: FlaskConical, label: "Blood Tests", gradient: "from-sky-400/20 to-cyan-500/10", iconColor: "text-sky-200" },
+                      { icon: Microscope, label: "Lab Reports", gradient: "from-amber-400/20 to-orange-500/10", iconColor: "text-amber-200" },
+                      { icon: Shield, label: "NABL Certified", gradient: "from-emerald-400/20 to-green-500/10", iconColor: "text-emerald-200" },
                     ].map((item) => (
                       <div
                         key={item.label}
-                        className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center gap-3 text-center border border-primary-foreground/10 hover:bg-primary-foreground/15 transition-colors"
+                        className={`bg-gradient-to-br ${item.gradient} backdrop-blur-sm rounded-2xl p-6 flex flex-col items-center gap-3 text-center border border-primary-foreground/15 hover:border-primary-foreground/30 transition-all duration-300 hover:-translate-y-1`}
                       >
-                        <item.icon className={`h-10 w-10 ${item.color}`} />
-                        <span className="text-base font-medium text-primary-foreground">{item.label}</span>
+                        <item.icon className={`h-10 w-10 ${item.iconColor} drop-shadow-lg`} />
+                        <span className="text-base font-semibold text-primary-foreground drop-shadow-sm">{item.label}</span>
                       </div>
                     ))}
                   </div>
@@ -102,25 +123,25 @@ const Index = () => {
               </div>
             </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Features */}
       <section className="py-20 bg-card border-y relative overflow-hidden">
         <div className="absolute inset-0 opacity-40" style={{ background: "var(--gradient-subtle)" }} />
-        <div className="container relative">
+        <motion.div
+          className="container relative"
+          variants={staggerContainer}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+        >
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, i) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
+            {features.map((feature) => (
+              <motion.div key={feature.title} variants={itemVariant}>
                 <Card className="text-center border-0 shadow-none bg-transparent group">
                   <CardContent className="pt-8 pb-6">
-                    <div className="w-18 h-18 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg" style={{ background: "var(--gradient-primary)" }}>
+                    <div className="w-18 h-18 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg group-hover:shadow-xl transition-shadow duration-300" style={{ background: "var(--gradient-primary)" }}>
                       <feature.icon className="h-8 w-8 lg:h-10 lg:w-10 text-primary-foreground" />
                     </div>
                     <h3 className="font-display font-semibold text-lg lg:text-xl text-foreground mb-2">{feature.title}</h3>
@@ -130,25 +151,31 @@ const Index = () => {
               </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Categories */}
       <section className="py-20">
         <div className="container">
-          <div className="text-center mb-12">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            variants={sectionVariants}
+            className="text-center mb-12"
+          >
             <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-3">Browse by Category</h2>
             <p className="text-base lg:text-lg text-muted-foreground">Choose from our wide range of diagnostic tests</p>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
-            {categories.map((cat, i) => (
-              <motion.div
-                key={cat.id}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-              >
+          </motion.div>
+          <motion.div
+            className="grid grid-cols-2 sm:grid-cols-4 gap-5"
+            variants={staggerContainer}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-60px" }}
+          >
+            {categories.map((cat) => (
+              <motion.div key={cat.id} variants={itemVariant}>
                 <Link to={`/tests?category=${cat.id}`}>
                   <Card className="cursor-pointer hover:border-primary/40 transition-all text-center group hover:-translate-y-1 duration-300" style={{ boxShadow: "var(--card-shadow)" }}>
                     <CardContent className="pt-8 pb-6">
@@ -160,7 +187,7 @@ const Index = () => {
                 </Link>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -168,7 +195,13 @@ const Index = () => {
       <section className="py-20 relative overflow-hidden">
         <div className="absolute inset-0 opacity-30" style={{ background: "var(--gradient-subtle)" }} />
         <div className="container relative">
-          <div className="flex items-end justify-between mb-12">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-80px" }}
+            variants={sectionVariants}
+            className="flex items-end justify-between mb-12"
+          >
             <div>
               <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-2">Popular Tests</h2>
               <p className="text-base lg:text-lg text-muted-foreground">Most booked tests by our patients</p>
@@ -178,7 +211,7 @@ const Index = () => {
                 View All <ArrowRight className="ml-1 h-5 w-5" />
               </Button>
             </Link>
-          </div>
+          </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {popularTests.map((test, i) => (
               <TestCard key={test.id} test={test} index={i} />
@@ -187,13 +220,17 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Testimonials */}
+      <TestimonialsSection />
+
       {/* CTA */}
       <section className="py-20">
         <div className="container">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 30, scale: 0.98 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
             className="rounded-3xl p-10 lg:p-16 text-center text-primary-foreground relative overflow-hidden"
             style={{ background: "var(--gradient-premium)" }}
           >
