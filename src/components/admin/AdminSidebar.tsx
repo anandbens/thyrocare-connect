@@ -28,7 +28,7 @@ const allMenuItems: MenuItem[] = [
   { title: "Testimonials", url: "/admin/testimonials", icon: MessageSquareQuote, roles: ["admin", "content_moderator"] },
   { title: "Menus", url: "/admin/menus", icon: Menu, roles: ["admin", "content_moderator"] },
   { title: "Pages", url: "/admin/pages", icon: FileText, roles: ["admin", "content_moderator"] },
-  { title: "Customers", url: "/admin/customers", icon: Users, roles: ["admin"] },
+  { title: "Users", url: "/admin/users", icon: Users, roles: ["admin"] },
   { title: "OTP Logs", url: "/admin/otp-logs", icon: Key, roles: ["admin"] },
   { title: "Activity Logs", url: "/admin/activity-logs", icon: Activity, roles: ["admin"] },
   { title: "Email Templates", url: "/admin/email-templates", icon: Mail, roles: ["admin"] },

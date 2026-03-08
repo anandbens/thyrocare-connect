@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminPaginationControls from "@/components/admin/AdminPaginationControls";
+import { useAdminPagination } from "@/hooks/useAdminPagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,13 +21,15 @@ const AdminCategories = () => {
   const [form, setForm] = useState({ id: "", name: "", icon: "🏥", sort_order: 0, is_active: true });
   const [editing, setEditing] = useState(false);
 
-  const fetch = async () => {
+  const fetchData = async () => {
     setLoading(true);
     const { data } = await supabase.from("test_categories").select("*").order("sort_order");
     setItems(data || []);
     setLoading(false);
   };
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchData(); }, []);
+
+  const { paginatedData, currentPage, totalPages, totalItems, setCurrentPage, rowsPerPage } = useAdminPagination(items);
 
   const save = async () => {
     const payload = { name: form.name, icon: form.icon, sort_order: form.sort_order, is_active: form.is_active };
@@ -33,13 +37,23 @@ const AdminCategories = () => {
       ? await supabase.from("test_categories").update(payload).eq("id", form.id)
       : await supabase.from("test_categories").insert(payload);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Saved" }); setDialogOpen(false); fetch(); }
+    else { toast({ title: "Saved" }); setDialogOpen(false); fetchData(); }
   };
 
   const del = async (id: string) => {
     const { error } = await supabase.from("test_categories").delete().eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Deleted" }); fetch(); }
+    else { toast({ title: "Deleted" }); fetchData(); }
+  };
+
+  const exportToExcel = () => {
+    const headers = ["Icon", "Name", "Sort Order", "Active"];
+    const rows = items.map((c) => [c.icon, c.name, c.sort_order, c.is_active ? "Yes" : "No"]);
+    const csv = [headers, ...rows].map((r) => r.map((c: any) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `categories-${new Date().toISOString().split("T")[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -47,16 +61,19 @@ const AdminCategories = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-display">Test Categories</CardTitle>
-          <Button onClick={() => { setForm({ id: "", name: "", icon: "🏥", sort_order: 0, is_active: true }); setEditing(false); setDialogOpen(true); }}>
-            <Plus className="h-4 w-4 mr-2" /> Add
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={exportToExcel} variant="outline" size="sm"><Download className="h-4 w-4 mr-2" /> Export CSV</Button>
+            <Button onClick={() => { setForm({ id: "", name: "", icon: "🏥", sort_order: 0, is_active: true }); setEditing(false); setDialogOpen(true); }}>
+              <Plus className="h-4 w-4 mr-2" /> Add
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
             <Table>
               <TableHeader><TableRow><TableHead>Icon</TableHead><TableHead>Name</TableHead><TableHead>Order</TableHead><TableHead>Active</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
               <TableBody>
-                {items.map((c) => (
+                {paginatedData.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell>{c.icon}</TableCell>
                     <TableCell className="font-medium">{c.name}</TableCell>
@@ -71,6 +88,7 @@ const AdminCategories = () => {
               </TableBody>
             </Table>
           </div>
+          <AdminPaginationControls currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} rowsPerPage={rowsPerPage} onPageChange={setCurrentPage} />
         </CardContent>
       </Card>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

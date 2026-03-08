@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import AdminLayout from "@/components/admin/AdminLayout";
+import AdminPaginationControls from "@/components/admin/AdminPaginationControls";
+import { useAdminPagination } from "@/hooks/useAdminPagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -17,11 +19,13 @@ const AdminPages = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ id: "", page_key: "", title: "", content: "{}" });
 
-  const fetch = async () => {
+  const fetchData = async () => {
     const { data } = await supabase.from("page_content").select("*").order("page_key");
     setItems(data || []);
   };
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetchData(); }, []);
+
+  const { paginatedData, currentPage, totalPages, totalItems, setCurrentPage, rowsPerPage } = useAdminPagination(items);
 
   const save = async () => {
     let parsed;
@@ -30,7 +34,17 @@ const AdminPages = () => {
       ? await supabase.from("page_content").update({ title: form.title, content: parsed }).eq("id", form.id)
       : await supabase.from("page_content").insert({ page_key: form.page_key, title: form.title, content: parsed });
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-    else { toast({ title: "Saved" }); setDialogOpen(false); fetch(); }
+    else { toast({ title: "Saved" }); setDialogOpen(false); fetchData(); }
+  };
+
+  const exportToExcel = () => {
+    const headers = ["Page Key", "Title"];
+    const rows = items.map((p) => [p.page_key, p.title || ""]);
+    const csv = [headers, ...rows].map((r) => r.map((c: any) => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `pages-${new Date().toISOString().split("T")[0]}.csv`; a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -38,14 +52,17 @@ const AdminPages = () => {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="font-display">Page Content Management</CardTitle>
-          <Button onClick={() => { setForm({ id: "", page_key: "", title: "", content: "{}" }); setDialogOpen(true); }}>Add Page</Button>
+          <div className="flex gap-2">
+            <Button onClick={exportToExcel} variant="outline" size="sm"><Download className="h-4 w-4 mr-2" /> Export CSV</Button>
+            <Button onClick={() => { setForm({ id: "", page_key: "", title: "", content: "{}" }); setDialogOpen(true); }}>Add Page</Button>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border">
             <Table>
               <TableHeader><TableRow><TableHead>Page Key</TableHead><TableHead>Title</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
               <TableBody>
-                {items.map((p) => (
+                {paginatedData.map((p) => (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.page_key}</TableCell>
                     <TableCell>{p.title}</TableCell>
@@ -59,6 +76,7 @@ const AdminPages = () => {
               </TableBody>
             </Table>
           </div>
+          <AdminPaginationControls currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} rowsPerPage={rowsPerPage} onPageChange={setCurrentPage} />
         </CardContent>
       </Card>
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

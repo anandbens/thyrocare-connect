@@ -25,7 +25,7 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminBanners from "./pages/admin/AdminBanners";
 import AdminMenus from "./pages/admin/AdminMenus";
 import AdminPages from "./pages/admin/AdminPages";
-import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminUsers from "./pages/admin/AdminUsers";
 import AdminOtpLogs from "./pages/admin/AdminOtpLogs";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -66,7 +66,7 @@ const App = () => (
               <Route path="/admin/testimonials" element={<AdminTestimonials />} />
               <Route path="/admin/menus" element={<AdminMenus />} />
               <Route path="/admin/pages" element={<AdminPages />} />
-              <Route path="/admin/customers" element={<AdminCustomers />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/otp-logs" element={<AdminOtpLogs />} />
               <Route path="/admin/activity-logs" element={<AdminActivityLogs />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
