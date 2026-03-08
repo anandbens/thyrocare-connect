@@ -1,7 +1,7 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Package, ShoppingCart, Users, Settings, FileText,
-  Image, Menu, ClipboardList, Key, LogOut, Activity, MessageSquareQuote
+  Image, Menu, ClipboardList, Key, LogOut, Activity, MessageSquareQuote, Mail
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
