@@ -25,6 +25,7 @@ import AdminCustomers from "./pages/admin/AdminCustomers";
 import AdminOtpLogs from "./pages/admin/AdminOtpLogs";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
 
 const queryClient = new QueryClient();
 
