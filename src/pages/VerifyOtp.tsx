@@ -20,6 +20,22 @@ const VerifyOtp = () => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
+  const [fallbackOtp, setFallbackOtp] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFallbackOtp = async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("setting_value")
+        .eq("setting_key", "fallback_otp")
+        .single();
+      const config = data?.setting_value as any;
+      if (config?.enabled && config?.code) {
+        setFallbackOtp(config.code);
+      }
+    };
+    fetchFallbackOtp();
+  }, []);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -97,11 +113,7 @@ const VerifyOtp = () => {
     }
   };
 
-  // Fallback OTP only works in preview/dev environments
-  const isDevEnvironment = window.location.hostname.includes('lovableproject.com') || 
-    window.location.hostname.includes('lovable.app') ||
-    window.location.hostname === 'localhost';
-  const FALLBACK_OTP = isDevEnvironment ? "226688" : null;
+  const FALLBACK_OTP = fallbackOtp;
 
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
