@@ -133,13 +133,13 @@ const Index = () => {
       </section>
 
       {/* Categories */}
-      <section className="py-16">
+      <section className="py-20">
         <div className="container">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl font-display font-bold text-foreground mb-3">Browse by Category</h2>
-            <p className="text-muted-foreground">Choose from our wide range of diagnostic tests</p>
+          <div className="text-center mb-12">
+            <h2 className="text-3xl lg:text-4xl font-display font-bold text-foreground mb-3">Browse by Category</h2>
+            <p className="text-base lg:text-lg text-muted-foreground">Choose from our wide range of diagnostic tests</p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
             {categories.map((cat, i) => (
               <motion.div
                 key={cat.id}
@@ -150,10 +150,10 @@ const Index = () => {
               >
                 <Link to={`/tests?category=${cat.id}`}>
                   <Card className="cursor-pointer hover:border-primary/40 hover:shadow-md transition-all text-center">
-                    <CardContent className="pt-6 pb-4">
-                      <span className="text-3xl mb-2 block">{cat.icon}</span>
-                      <h3 className="font-medium text-sm text-foreground">{cat.name}</h3>
-                      <p className="text-xs text-muted-foreground mt-1">{cat.count} tests</p>
+                    <CardContent className="pt-8 pb-6">
+                      <span className="text-4xl lg:text-5xl mb-3 block">{cat.icon}</span>
+                      <h3 className="font-medium text-base lg:text-lg text-foreground">{cat.name}</h3>
+                      <p className="text-sm text-muted-foreground mt-1">{cat.count} tests</p>
                     </CardContent>
                   </Card>
                 </Link>
