@@ -136,16 +136,16 @@ const Index = () => {
           whileInView="visible"
           viewport={{ once: true, margin: "-80px" }}
         >
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {features.map((feature) => (
               <motion.div key={feature.title} variants={itemVariant}>
                 <Card className="text-center border-0 shadow-none bg-transparent group">
-                  <CardContent className="pt-8 pb-6">
-                    <div className="w-18 h-18 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg group-hover:shadow-xl transition-shadow duration-300" style={{ background: "var(--gradient-primary)" }}>
-                      <feature.icon className="h-8 w-8 lg:h-10 lg:w-10 text-primary-foreground" />
+                  <CardContent className="pt-6 pb-4 lg:pt-8 lg:pb-6 px-3 lg:px-6">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center mx-auto mb-4 lg:mb-5 shadow-lg group-hover:shadow-xl transition-shadow duration-300" style={{ background: "var(--gradient-primary)" }}>
+                      <feature.icon className="h-6 w-6 sm:h-7 sm:w-7 lg:h-10 lg:w-10 text-primary-foreground" />
                     </div>
-                    <h3 className="font-display font-semibold text-lg lg:text-xl text-foreground mb-2">{feature.title}</h3>
-                    <p className="text-base text-muted-foreground">{feature.desc}</p>
+                    <h3 className="font-display font-semibold text-sm sm:text-base lg:text-xl text-foreground mb-1 lg:mb-2">{feature.title}</h3>
+                    <p className="text-xs sm:text-sm lg:text-base text-muted-foreground leading-relaxed">{feature.desc}</p>
                   </CardContent>
                 </Card>
               </motion.div>
