@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Download } from "lucide-react";
+import { useEffect, useState, lazy, Suspense } from "react";
+import { Plus, Pencil, Trash2, Download, icons } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
