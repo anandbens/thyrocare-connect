@@ -18,6 +18,7 @@ const menuItems = [
   { title: "Tests", url: "/admin/tests", icon: Package },
   { title: "Categories", url: "/admin/categories", icon: ClipboardList },
   { title: "Banners", url: "/admin/banners", icon: Image },
+  { title: "Testimonials", url: "/admin/testimonials", icon: MessageSquareQuote },
   { title: "Menus", url: "/admin/menus", icon: Menu },
   { title: "Pages", url: "/admin/pages", icon: FileText },
   { title: "Customers", url: "/admin/customers", icon: Users },
