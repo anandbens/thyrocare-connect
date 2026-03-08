@@ -110,6 +110,42 @@ const AdminSettings = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="sms">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-display">SMS Gateway Configuration</CardTitle>
+              <CardDescription>Configure SMS gateway for sending OTPs via SMS</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Gateway API URL *</Label>
+                  <Input value={sms.gateway_url} onChange={(e) => setSms({ ...sms, gateway_url: e.target.value })} placeholder="https://api.smsprovider.com/send" />
+                </div>
+                <div className="space-y-2">
+                  <Label>API Key *</Label>
+                  <Input type="password" value={sms.api_key} onChange={(e) => setSms({ ...sms, api_key: e.target.value })} placeholder="Your SMS API key" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Entity ID</Label>
+                  <Input value={sms.entity_id} onChange={(e) => setSms({ ...sms, entity_id: e.target.value })} placeholder="DLT Entity ID" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Sender ID</Label>
+                  <Input value={sms.sender_id} onChange={(e) => setSms({ ...sms, sender_id: e.target.value })} placeholder="THYROC" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Template ID</Label>
+                  <Input value={sms.template_id} onChange={(e) => setSms({ ...sms, template_id: e.target.value })} placeholder="DLT Template ID" />
+                </div>
+              </div>
+              <Button onClick={() => saveSetting("sms_gateway", sms)} disabled={loading}>
+                <Save className="h-4 w-4 mr-2" /> Save SMS Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="smtp">
           <Card>
             <CardHeader>
