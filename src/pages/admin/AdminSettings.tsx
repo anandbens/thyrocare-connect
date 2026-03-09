@@ -329,7 +329,17 @@ const AdminSettings = () => {
             )}
           </Card>
 
-          <Button onClick={() => saveSetting("payment_gateways", gateways)} disabled={loading}>
+          <Button onClick={() => {
+            // Save full config (with secrets) to protected key
+            saveSetting("payment_gateways_secret", gateways);
+            // Save public-only config (no secrets) for frontend
+            const publicConfig = {
+              razorpay: { enabled: gateways.razorpay.enabled, is_sandbox: gateways.razorpay.is_sandbox, key_id: gateways.razorpay.key_id },
+              phonepe: { enabled: gateways.phonepe.enabled, is_sandbox: gateways.phonepe.is_sandbox, client_id: gateways.phonepe.client_id },
+              cashfree: { enabled: gateways.cashfree.enabled, is_sandbox: gateways.cashfree.is_sandbox, app_id: gateways.cashfree.app_id },
+            };
+            saveSetting("payment_gateways_public", publicConfig);
+          }} disabled={loading}>
             <Save className="h-4 w-4 mr-2" /> Save Payment Gateway Settings
           </Button>
         </TabsContent>
