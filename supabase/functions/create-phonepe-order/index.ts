@@ -7,9 +7,32 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT = 5;
+const RATE_WINDOW = 60_000;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW });
+    return false;
+  }
+  entry.count++;
+  return entry.count > RATE_LIMIT;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isRateLimited(clientIp)) {
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please try again later." }),
+      { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   }
 
   try {
@@ -17,11 +40,10 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get PhonePe config
     const { data: settingsData } = await supabase
       .from("site_settings")
       .select("setting_value")
-      .eq("setting_key", "payment_gateways")
+      .eq("setting_key", "payment_gateways_secret")
       .single();
 
     const gateways = settingsData?.setting_value as any;
@@ -34,14 +56,37 @@ serve(async (req) => {
       );
     }
 
-    const { amount, order_id, redirect_url } = await req.json();
+    const { order_id, redirect_url } = await req.json();
 
-    if (!amount || amount <= 0) {
+    if (!order_id) {
       return new Response(
-        JSON.stringify({ error: "Invalid amount" }),
+        JSON.stringify({ error: "Order ID is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Server-side amount validation
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("id, total_amount, order_number, payment_status")
+      .eq("id", order_id)
+      .single();
+
+    if (orderError || !order) {
+      return new Response(
+        JSON.stringify({ error: "Order not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (order.payment_status === "paid") {
+      return new Response(
+        JSON.stringify({ error: "Order is already paid" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const amount = Number(order.total_amount);
 
     const baseUrl = config.is_sandbox
       ? "https://api-preprod.phonepe.com/apis/pg-sandbox"
@@ -79,12 +124,12 @@ serve(async (req) => {
     const merchantOrderId = `ORDER-${order_id}-${Date.now()}`;
     const paymentPayload = {
       merchantOrderId,
-      amount: Math.round(amount * 100), // in paise
-      expireAfter: 1200, // 20 minutes
+      amount: Math.round(amount * 100),
+      expireAfter: 1200,
       paymentFlow: {
         type: "PG_CHECKOUT",
         merchantUrls: {
-          redirectUrl: redirect_url || `${Deno.env.get("SUPABASE_URL")}/functions/v1/verify-phonepe-payment?order_id=${order_id}&merchant_order_id=${merchantOrderId}`,
+          redirectUrl: redirect_url || `${supabaseUrl}/functions/v1/verify-phonepe-payment?order_id=${order_id}&merchant_order_id=${merchantOrderId}`,
         },
       },
     };

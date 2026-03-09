@@ -20,7 +20,7 @@ serve(async (req) => {
     const { data: settingsData } = await supabase
       .from("site_settings")
       .select("setting_value")
-      .eq("setting_key", "payment_gateways")
+      .eq("setting_key", "payment_gateways_secret")
       .single();
 
     const gateways = settingsData?.setting_value as any;
@@ -33,7 +33,6 @@ serve(async (req) => {
       );
     }
 
-    // Can be called as redirect (GET) or API (POST)
     let order_id: string, merchant_order_id: string;
 
     if (req.method === "GET") {
@@ -61,7 +60,6 @@ serve(async (req) => {
       ? "https://api-preprod.phonepe.com/apis/pg-sandbox"
       : "https://api.phonepe.com/apis/identity-manager";
 
-    // Get OAuth token
     const tokenResponse = await fetch(`${authUrl}/v1/oauth/token`, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -76,7 +74,6 @@ serve(async (req) => {
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
 
-    // Check order status
     const statusResponse = await fetch(
       `${baseUrl}/checkout/v2/order/${merchant_order_id}/status`,
       {
@@ -97,10 +94,7 @@ serve(async (req) => {
         order_status: "confirmed",
       }).eq("id", order_id);
 
-      // If GET request (redirect), redirect to frontend
       if (req.method === "GET") {
-        // Redirect to frontend success page
-        const frontendUrl = Deno.env.get("FRONTEND_URL") || supabaseUrl.replace("supabase.co", "lovable.app");
         return new Response(null, {
           status: 302,
           headers: { Location: `/dashboard/orders?payment=success` },

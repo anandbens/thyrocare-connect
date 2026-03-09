@@ -6,6 +6,22 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Rate limiting: 3 OTP requests per phone per 5 minutes
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const OTP_RATE_LIMIT = 3;
+const OTP_RATE_WINDOW = 5 * 60_000; // 5 minutes
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(key);
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(key, { count: 1, resetAt: now + OTP_RATE_WINDOW });
+    return false;
+  }
+  entry.count++;
+  return entry.count > OTP_RATE_LIMIT;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -21,7 +37,33 @@ serve(async (req) => {
       );
     }
 
-    // Fetch SMS gateway settings from site_settings
+    // Validate phone format
+    if (!/^[6-9]\d{9}$/.test(phone)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid phone number format", sent: false }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rate limit by phone number + IP
+    const clientIp = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+    const rateLimitKey = `${phone}_${clientIp}`;
+    
+    if (isRateLimited(rateLimitKey)) {
+      return new Response(
+        JSON.stringify({ error: "Too many OTP requests. Please try again in a few minutes.", sent: false }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate OTP format (should be numeric, 4-6 digits)
+    if (!/^\d{4,6}$/.test(otp)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid OTP format", sent: false }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -55,10 +97,8 @@ serve(async (req) => {
       );
     }
 
-    // Build the SMS message
     const message = `Your OTP for Thyrocare Nagercoil checkout is ${otp}. Valid for 10 minutes. Do not share this with anyone.`;
 
-    // Generic SMS API call - adapt URL params based on your provider
     const smsUrl = new URL(gateway_url);
     smsUrl.searchParams.set("apikey", api_key);
     if (entity_id) smsUrl.searchParams.set("entity_id", entity_id);
@@ -70,10 +110,11 @@ serve(async (req) => {
     const smsResponse = await fetch(smsUrl.toString());
     const smsResult = await smsResponse.text();
 
-    console.log("SMS API Response:", smsResult);
+    // Don't log the OTP in production
+    console.log("SMS API Response status:", smsResponse.status);
 
     return new Response(
-      JSON.stringify({ sent: true, response: smsResult }),
+      JSON.stringify({ sent: true }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
