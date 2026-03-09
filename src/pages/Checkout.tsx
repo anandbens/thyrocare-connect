@@ -56,10 +56,16 @@ const Checkout = () => {
 
   const [isExistingUser, setIsExistingUser] = useState(false);
 
-  // Auto-populate from existing orders if phone matches
+  // Auto-populate from profile and existing orders if phone matches
   useEffect(() => {
     if (!verifiedPhone) return;
     const fetchExistingData = async () => {
+      // First check profiles table for user info via secure RPC
+      const { data: rawProfile } = await supabase
+        .rpc("get_profile_by_phone", { p_phone: verifiedPhone });
+      const profileData = rawProfile as { full_name?: string; email?: string; phone?: string } | null;
+
+      // Then check previous orders for address and additional details
       const { data: existingOrders } = await supabase
         .from("orders")
         .select("*")
@@ -67,24 +73,24 @@ const Checkout = () => {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (existingOrders && existingOrders.length > 0) {
-        const o = existingOrders[0];
+      if (profileData || (existingOrders && existingOrders.length > 0)) {
         setIsExistingUser(true);
+        const o = existingOrders?.[0];
         setForm((prev) => ({
           ...prev,
-          name: o.customer_name || prev.name,
-          email: o.customer_email || prev.email,
+          name: profileData?.full_name || o?.customer_name || prev.name,
+          email: profileData?.email || o?.customer_email || prev.email,
           phone: verifiedPhone,
-          altPhone: o.alt_phone || "",
-          age: o.age?.toString() || "",
-          gender: o.gender || "male",
-          address1: o.address1 || "",
-          address2: o.address2 || "",
-          landmark: o.landmark || "",
-          district: o.district || "",
-          area: o.area || "",
-          state: o.state || "Tamil Nadu",
-          pincode: o.pincode || "",
+          altPhone: o?.alt_phone || "",
+          age: o?.age?.toString() || "",
+          gender: o?.gender || "male",
+          address1: o?.address1 || "",
+          address2: o?.address2 || "",
+          landmark: o?.landmark || "",
+          district: o?.district || "",
+          area: o?.area || "",
+          state: o?.state || "Tamil Nadu",
+          pincode: o?.pincode || "",
         }));
       }
     };
@@ -302,7 +308,7 @@ const Checkout = () => {
 
           {isExistingUser && (
             <div className="mb-4 p-3 rounded-lg bg-primary/10 text-primary text-sm">
-              ✅ Welcome back! We've pre-filled your details from your previous order. You can update the alternative number and address if needed.
+              ✅ Welcome back! We've pre-filled your details from your profile. You can update your address and collection preferences below.
             </div>
           )}
 
@@ -316,7 +322,7 @@ const Checkout = () => {
                   <CardContent className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name *</Label>
-                      <Input id="name" required value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Enter full name" />
+                      <Input id="name" required value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Enter full name" readOnly={isExistingUser} className={isExistingUser ? "bg-muted" : ""} />
                       {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
                     </div>
                     <div className="space-y-2">
@@ -336,7 +342,7 @@ const Checkout = () => {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email *</Label>
-                      <Input id="email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@example.com" />
+                      <Input id="email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@example.com" readOnly={isExistingUser} className={isExistingUser ? "bg-muted" : ""} />
                       {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                     <div className="space-y-2">
@@ -361,6 +367,8 @@ const Checkout = () => {
                         value={form.age}
                         onChange={(e) => update("age", e.target.value.replace(/\D/g, "").slice(0, 2))}
                         placeholder="Age (1-99)"
+                        readOnly={isExistingUser && !!form.age}
+                        className={isExistingUser && !!form.age ? "bg-muted" : ""}
                       />
                       {errors.age && <p className="text-sm text-destructive">{errors.age}</p>}
                     </div>
@@ -369,7 +377,7 @@ const Checkout = () => {
                       <div className="flex gap-4">
                         {["male", "female", "other"].map((g) => (
                           <label key={g} className="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="gender" value={g} checked={form.gender === g} onChange={(e) => update("gender", e.target.value)} className="accent-primary" />
+                            <input type="radio" name="gender" value={g} checked={form.gender === g} onChange={(e) => update("gender", e.target.value)} className="accent-primary" disabled={isExistingUser && !!form.gender} />
                             <span className="text-sm capitalize">{g}</span>
                           </label>
                         ))}
