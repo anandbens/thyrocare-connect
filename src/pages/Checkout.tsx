@@ -60,12 +60,9 @@ const Checkout = () => {
   useEffect(() => {
     if (!verifiedPhone) return;
     const fetchExistingData = async () => {
-      // First check profiles table for user info
+      // First check profiles table for user info via secure RPC
       const { data: profileData } = await supabase
-        .from("profiles")
-        .select("full_name, email, phone")
-        .eq("phone", verifiedPhone)
-        .maybeSingle();
+        .rpc("get_profile_by_phone", { p_phone: verifiedPhone });
 
       // Then check previous orders for address and additional details
       const { data: existingOrders } = await supabase
