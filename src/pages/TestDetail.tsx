@@ -9,7 +9,7 @@ import Layout from "@/components/layout/Layout";
 import { LabTest, ParamGroup } from "@/data/tests";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/integrations/supabase/client";
-import defaultTestImage from "@/assets/test-default-blood.jpg";
+import { getTestImage } from "@/lib/testImages";
 
 const TestDetail = () => {
   const { id } = useParams();
