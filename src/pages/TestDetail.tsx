@@ -81,6 +81,15 @@ const TestDetail = () => {
 
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
+              {/* Test Banner Image */}
+              <div className="rounded-2xl overflow-hidden shadow-lg">
+                <img
+                  src={test.image_url || defaultTestImage}
+                  alt={test.name}
+                  className="w-full h-48 sm:h-64 object-cover"
+                />
+              </div>
+
               <div>
                 {test.is_popular && (
                   <Badge className="bg-accent/15 text-accent-foreground border-accent/30 mb-3">⭐ Popular</Badge>
