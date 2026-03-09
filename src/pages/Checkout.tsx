@@ -636,12 +636,52 @@ const Checkout = () => {
                       <span>Total</span>
                       <span>₹{totalAmount}</span>
                     </div>
+
+                    {/* Payment Gateway Selection */}
+                    {enabledGateways.length > 0 && (
+                      <div className="mt-4 space-y-3">
+                        <Label className="flex items-center gap-1.5 text-sm font-semibold">
+                          <CreditCard className="h-4 w-4" /> Pay via
+                        </Label>
+                        <div className="grid gap-2">
+                          {enabledGateways.map((gw) => (
+                            <label
+                              key={gw.key}
+                              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                                selectedGateway === gw.key
+                                  ? "border-primary bg-primary/5"
+                                  : "border-input hover:border-primary/50"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="payment_gateway"
+                                value={gw.key}
+                                checked={selectedGateway === gw.key}
+                                onChange={() => setSelectedGateway(gw.key)}
+                                className="accent-primary"
+                              />
+                              <span className="text-sm font-medium">{gw.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <Button type="submit" className="w-full rounded-xl mt-4" size="lg" disabled={loading}>
-                      {loading ? "Placing Order..." : `Place Order — ₹${totalAmount}`}
+                      {loading
+                        ? "Processing..."
+                        : enabledGateways.length > 0
+                        ? `Pay ₹${totalAmount}`
+                        : `Place Order — ₹${totalAmount}`
+                      }
                     </Button>
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-2">
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      Payment details will be shared via WhatsApp
+                      {enabledGateways.length > 0
+                        ? "Secure payment powered by your selected gateway"
+                        : "Payment details will be shared via WhatsApp"
+                      }
                     </div>
                   </CardContent>
                 </Card>
