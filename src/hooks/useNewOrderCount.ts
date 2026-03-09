@@ -30,18 +30,14 @@ export function useNewOrderCount() {
     const { data, error } = await supabase.rpc("get_paginated_orders", {
       p_page: 1,
       p_per_page: 1,
-      p_search: null,
-      p_order_status: "received",
-      p_payment_status: null,
-      p_date_from: null,
-      p_date_to: null,
+      p_tab: "new",
+      p_count_only: true,
     });
     if (!error && data) {
       const result = data as any;
       const newCount = result?.total || 0;
       setCount(newCount);
 
-      // Only alert if count increased after initial load
       if (initializedRef.current && newCount > prevCountRef.current) {
         playNotificationSound();
       }
@@ -51,7 +47,6 @@ export function useNewOrderCount() {
   }, []);
 
   useEffect(() => {
-    // Request notification permission on mount
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
@@ -59,7 +54,6 @@ export function useNewOrderCount() {
     fetchCount();
     const interval = setInterval(fetchCount, 30000);
 
-    // Realtime subscription for instant detection
     const channel = supabase
       .channel("admin-new-orders")
       .on(
@@ -69,7 +63,6 @@ export function useNewOrderCount() {
           const order = payload.new as any;
           playNotificationSound();
           showBrowserNotification(order.order_number || "New");
-          // Refresh count
           fetchCount();
         }
       )

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AdminLayout from "@/components/admin/AdminLayout";
 import AdminPaginationControls from "@/components/admin/AdminPaginationControls";
 import { supabase } from "@/integrations/supabase/client";
@@ -50,8 +50,6 @@ const defaultPaymentConfig: PaymentConfig = {
 };
 
 const ROWS_PER_PAGE = 15;
-
-const PROCESSED_STATUSES = ["confirmed", "sample_collected", "processing", "completed"];
 
 const buildWhatsAppPaymentMessage = (order: any, config: PaymentConfig) => {
   const tests = order.order_items?.map((i: any) => i.test_name).join(", ") || "N/A";
@@ -95,17 +93,15 @@ const AdminOrders = () => {
   const fetchOrders = useCallback(async () => {
     setLoading(true);
 
-    // Fetch all orders matching filters, then split by tab logic client-side
-    // For "new" tab: orders that are NOT (paid + confirmed/beyond)
-    // For "processed" tab: orders that ARE (paid + confirmed/beyond)
     const { data, error } = await supabase.rpc("get_paginated_orders", {
-      p_page: 1,
-      p_per_page: 100000,
+      p_page: currentPage,
+      p_per_page: ROWS_PER_PAGE,
       p_search: search || null,
       p_order_status: statusFilter === "all" ? null : statusFilter,
       p_payment_status: paymentFilter === "all" ? null : paymentFilter,
       p_date_from: dateFrom ? new Date(dateFrom).toISOString() : null,
       p_date_to: dateTo ? new Date(dateTo + "T23:59:59").toISOString() : null,
+      p_tab: activeTab,
     });
 
     if (error) {
@@ -115,22 +111,9 @@ const AdminOrders = () => {
       setTotalPages(1);
     } else {
       const result = data as any;
-      const allOrders: any[] = result.data || [];
-
-      // Split into new vs processed
-      const filtered = allOrders.filter((o: any) => {
-        const isProcessed = o.payment_status === "paid" && PROCESSED_STATUSES.includes(o.order_status);
-        return activeTab === "new" ? !isProcessed : isProcessed;
-      });
-
-      // Client-side pagination
-      const total = filtered.length;
-      const start = (currentPage - 1) * ROWS_PER_PAGE;
-      const paginated = filtered.slice(start, start + ROWS_PER_PAGE);
-
-      setOrders(paginated);
-      setTotalItems(total);
-      setTotalPages(Math.max(1, Math.ceil(total / ROWS_PER_PAGE)));
+      setOrders(result.data || []);
+      setTotalItems(result.total || 0);
+      setTotalPages(result.total_pages || 1);
     }
     setLoading(false);
   }, [currentPage, search, statusFilter, paymentFilter, dateFrom, dateTo, activeTab, toast]);
@@ -144,13 +127,8 @@ const AdminOrders = () => {
     if (data?.setting_value) setPaymentConfig(data.setting_value as unknown as PaymentConfig);
   };
 
-  useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
-
-  useEffect(() => {
-    fetchPaymentConfig();
-  }, []);
+  useEffect(() => { fetchOrders(); }, [fetchOrders]);
+  useEffect(() => { fetchPaymentConfig(); }, []);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -188,6 +166,7 @@ const AdminOrders = () => {
   };
 
   const exportToExcel = async () => {
+    // Export all matching orders (server-side filtered by tab)
     const { data, error } = await supabase.rpc("get_paginated_orders", {
       p_page: 1,
       p_per_page: 100000,
@@ -196,12 +175,10 @@ const AdminOrders = () => {
       p_payment_status: paymentFilter === "all" ? null : paymentFilter,
       p_date_from: dateFrom ? new Date(dateFrom).toISOString() : null,
       p_date_to: dateTo ? new Date(dateTo + "T23:59:59").toISOString() : null,
+      p_tab: activeTab,
     });
     if (error) { toast({ title: "Export failed", description: error.message, variant: "destructive" }); return; }
-    const allOrders = ((data as any)?.data || []).filter((o: any) => {
-      const isProcessed = o.payment_status === "paid" && PROCESSED_STATUSES.includes(o.order_status);
-      return activeTab === "new" ? !isProcessed : isProcessed;
-    });
+    const allOrders = (data as any)?.data || [];
     const headers = ["Order #", "Date", "Customer", "Phone", "Email", "Tests", "Amount", "Payment", "Status"];
     const rows = allOrders.map((o: any) => [
       o.order_number,
