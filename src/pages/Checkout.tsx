@@ -456,14 +456,12 @@ const Checkout = () => {
                         value={form.phone}
                         onChange={(e) => update("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
                         placeholder="10-digit mobile number"
-                        readOnly={!!verifiedPhone}
-                        className={verifiedPhone ? "bg-muted" : ""}
                       />
                       {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email *</Label>
-                      <Input id="email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@example.com" readOnly={isExistingUser} className={isExistingUser ? "bg-muted" : ""} />
+                      <Input id="email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@example.com" readOnly={!!verifiedEmail} className={verifiedEmail ? "bg-muted" : ""} />
                       {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                     <div className="space-y-2">
