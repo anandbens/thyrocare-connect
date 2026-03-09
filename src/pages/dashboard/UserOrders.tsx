@@ -79,10 +79,23 @@ const UserOrders = () => {
                       <span className="font-bold text-foreground">₹{order.total_amount}</span>
                     </div>
                     {order.payment_status && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        Payment: <span className="capitalize">{order.payment_status}</span>
-                        {order.payment_type && ` · ${order.payment_type}`}
-                      </p>
+                      <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                        <p>
+                          Payment: <span className="capitalize font-medium">{order.payment_status}</span>
+                          {order.payment_type && ` · ${order.payment_type}`}
+                        </p>
+                        {order.payment_id && (
+                          <p>
+                            Gateway:{" "}
+                            {order.payment_id.startsWith("razorpay_") ? "Razorpay"
+                              : order.payment_id.startsWith("phonepe_") ? "PhonePe"
+                              : order.payment_id.startsWith("cashfree_") ? "Cashfree"
+                              : "Online"}
+                            {" · "}
+                            <span className="font-mono">{order.payment_id}</span>
+                          </p>
+                        )}
+                      </div>
                     )}
                   </CardContent>
                 </Card>
