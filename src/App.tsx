@@ -17,6 +17,7 @@ import SetPassword from "./pages/SetPassword";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import VerifyOtp from "./pages/VerifyOtp";
 import Dashboard from "./pages/dashboard/Dashboard";
 import UserOrders from "./pages/dashboard/UserOrders";
 import UserReports from "./pages/dashboard/UserReports";
@@ -52,7 +53,7 @@ const App = () => (
                 <Route path="/tests/:id" element={<TestDetail />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
-                <Route path="/verify-otp" element={<SetPassword />} />
+                <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/set-password" element={<SetPassword />} />
