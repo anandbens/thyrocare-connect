@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LabTest } from "@/data/tests";
 import { useCart } from "@/context/CartContext";
 import { Link } from "react-router-dom";
-import defaultTestImage from "@/assets/test-default-blood.jpg";
+import { getTestImage } from "@/lib/testImages";
 
 interface TestCardProps {
   test: LabTest;
