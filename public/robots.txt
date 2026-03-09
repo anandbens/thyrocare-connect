@@ -12,3 +12,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /login
+Disallow: /verify-otp
+Disallow: /cart
+Disallow: /checkout
+
+Sitemap: https://test-fairy-hub.lovable.app/sitemap.xml
