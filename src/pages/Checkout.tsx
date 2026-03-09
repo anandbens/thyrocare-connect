@@ -320,7 +320,7 @@ const Checkout = () => {
   const processPhonePe = async (order: any) => {
     const redirectUrl = `${window.location.origin}/dashboard/orders?payment=success`;
     const { data, error } = await supabase.functions.invoke("create-phonepe-order", {
-      body: { amount: totalAmount, order_id: order.id, redirect_url: redirectUrl },
+      body: { order_id: order.id, redirect_url: redirectUrl },
     });
     if (error || !data?.redirect_url) throw new Error("Failed to create PhonePe payment");
     // Redirect to PhonePe checkout
