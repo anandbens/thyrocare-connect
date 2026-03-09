@@ -111,6 +111,7 @@ const AdminTests = () => {
       price: Number(form.price), original_price: Number(form.original_price),
       is_popular: form.is_popular, turnaround: form.turnaround,
       fasting_required: form.fasting_required, sample_type: form.sample_type, is_active: form.is_active,
+      image_url: form.image_url || null,
     };
     let error;
     if (editing) ({ error } = await supabase.from("lab_tests").update(payload).eq("id", form.id));
