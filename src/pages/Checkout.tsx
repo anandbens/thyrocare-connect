@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ShieldCheck, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { useCart } from "@/context/CartContext";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 
+type EnabledGateway = { key: string; label: string };
 
 const Checkout = () => {
   const { items, totalAmount, totalSavings, clearCart } = useCart();
@@ -55,6 +56,29 @@ const Checkout = () => {
   }, [form]);
 
   const [isExistingUser, setIsExistingUser] = useState(false);
+  const [enabledGateways, setEnabledGateways] = useState<EnabledGateway[]>([]);
+  const [selectedGateway, setSelectedGateway] = useState<string>("");
+
+  // Fetch enabled payment gateways
+  useEffect(() => {
+    const fetchGateways = async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("setting_value")
+        .eq("setting_key", "payment_gateways")
+        .maybeSingle();
+      if (data?.setting_value) {
+        const gw = data.setting_value as any;
+        const enabled: EnabledGateway[] = [];
+        if (gw.razorpay?.enabled && gw.razorpay?.key_id) enabled.push({ key: "razorpay", label: "Razorpay" });
+        if (gw.phonepe?.enabled && gw.phonepe?.client_id) enabled.push({ key: "phonepe", label: "PhonePe" });
+        if (gw.cashfree?.enabled && gw.cashfree?.app_id) enabled.push({ key: "cashfree", label: "Cashfree" });
+        setEnabledGateways(enabled);
+        if (enabled.length === 1) setSelectedGateway(enabled[0].key);
+      }
+    };
+    fetchGateways();
+  }, []);
 
   // Auto-populate from profile and existing orders if phone matches
   useEffect(() => {
@@ -256,6 +280,78 @@ const Checkout = () => {
     return order;
   };
 
+  const processRazorpay = async (order: any) => {
+    const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
+      body: { amount: totalAmount, currency: "INR", receipt: order.order_number, notes: { order_id: order.id } },
+    });
+    if (error || !data?.order_id) throw new Error("Failed to create Razorpay order");
+
+    return new Promise<void>((resolve, reject) => {
+      const options = {
+        key: data.key_id,
+        amount: Math.round(totalAmount * 100),
+        currency: "INR",
+        name: "Thyrocare Nagercoil",
+        description: `Order ${order.order_number}`,
+        order_id: data.order_id,
+        handler: async (response: any) => {
+          try {
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-razorpay-payment", {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                order_id: order.id,
+              },
+            });
+            if (verifyError || !verifyData?.verified) reject(new Error("Payment verification failed"));
+            else resolve();
+          } catch (e) { reject(e); }
+        },
+        prefill: { name: form.name, email: form.email, contact: form.phone },
+        modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
+      };
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    });
+  };
+
+  const processPhonePe = async (order: any) => {
+    const redirectUrl = `${window.location.origin}/dashboard/orders?payment=success`;
+    const { data, error } = await supabase.functions.invoke("create-phonepe-order", {
+      body: { amount: totalAmount, order_id: order.id, redirect_url: redirectUrl },
+    });
+    if (error || !data?.redirect_url) throw new Error("Failed to create PhonePe payment");
+    // Redirect to PhonePe checkout
+    window.location.href = data.redirect_url;
+  };
+
+  const processCashfree = async (order: any) => {
+    const returnUrl = `${window.location.origin}/dashboard/orders?payment=success`;
+    const { data, error } = await supabase.functions.invoke("create-cashfree-order", {
+      body: {
+        amount: totalAmount,
+        order_id: order.id,
+        customer_name: form.name,
+        customer_email: form.email,
+        customer_phone: form.phone,
+        return_url: returnUrl,
+      },
+    });
+    if (error || !data?.payment_session_id) throw new Error("Failed to create Cashfree order");
+
+    // Use Cashfree JS SDK if available, otherwise redirect
+    const cashfree = (window as any).Cashfree;
+    if (cashfree) {
+      const cf = new cashfree({ mode: data.is_sandbox ? "sandbox" : "production" });
+      cf.checkout({ paymentSessionId: data.payment_session_id, redirectTarget: "_self" });
+    } else {
+      // Fallback: construct checkout URL
+      const checkoutBase = data.is_sandbox ? "https://sandbox.cashfree.com/pg/view/order" : "https://cashfree.com/pg/view/order";
+      window.location.href = `${checkoutBase}/${data.cf_order_id}`;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
@@ -265,13 +361,36 @@ const Checkout = () => {
       return;
     }
 
+    // If payment gateways are enabled, require selection
+    if (enabledGateways.length > 0 && !selectedGateway) {
+      toast({ title: "Select a payment method", description: "Please choose a payment gateway.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
       const order = await createOrder();
 
+      if (enabledGateways.length > 0 && selectedGateway) {
+        // Process online payment
+        if (selectedGateway === "razorpay") {
+          await processRazorpay(order);
+        } else if (selectedGateway === "phonepe") {
+          clearCart();
+          localStorage.removeItem("checkout_form");
+          await processPhonePe(order);
+          return; // PhonePe redirects away
+        } else if (selectedGateway === "cashfree") {
+          clearCart();
+          localStorage.removeItem("checkout_form");
+          await processCashfree(order);
+          return; // Cashfree redirects away
+        }
+      }
+
       toast({
         title: "Order placed successfully! 🎉",
-        description: `Order ${order.order_number} received. You will receive payment details via WhatsApp shortly.`,
+        description: `Order ${order.order_number} received.${enabledGateways.length === 0 ? " You will receive payment details via WhatsApp shortly." : " Payment confirmed!"}`,
       });
       clearCart();
       localStorage.removeItem("checkout_form");
@@ -517,12 +636,52 @@ const Checkout = () => {
                       <span>Total</span>
                       <span>₹{totalAmount}</span>
                     </div>
+
+                    {/* Payment Gateway Selection */}
+                    {enabledGateways.length > 0 && (
+                      <div className="mt-4 space-y-3">
+                        <Label className="flex items-center gap-1.5 text-sm font-semibold">
+                          <CreditCard className="h-4 w-4" /> Pay via
+                        </Label>
+                        <div className="grid gap-2">
+                          {enabledGateways.map((gw) => (
+                            <label
+                              key={gw.key}
+                              className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                                selectedGateway === gw.key
+                                  ? "border-primary bg-primary/5"
+                                  : "border-input hover:border-primary/50"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="payment_gateway"
+                                value={gw.key}
+                                checked={selectedGateway === gw.key}
+                                onChange={() => setSelectedGateway(gw.key)}
+                                className="accent-primary"
+                              />
+                              <span className="text-sm font-medium">{gw.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     <Button type="submit" className="w-full rounded-xl mt-4" size="lg" disabled={loading}>
-                      {loading ? "Placing Order..." : `Place Order — ₹${totalAmount}`}
+                      {loading
+                        ? "Processing..."
+                        : enabledGateways.length > 0
+                        ? `Pay ₹${totalAmount}`
+                        : `Place Order — ₹${totalAmount}`
+                      }
                     </Button>
                     <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground mt-2">
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      Payment details will be shared via WhatsApp
+                      {enabledGateways.length > 0
+                        ? "Secure payment powered by your selected gateway"
+                        : "Payment details will be shared via WhatsApp"
+                      }
                     </div>
                   </CardContent>
                 </Card>
