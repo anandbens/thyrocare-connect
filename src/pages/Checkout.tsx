@@ -34,8 +34,8 @@ const Checkout = () => {
 
   const [form, setForm] = useState({
     name: savedForm?.name || "",
-    email: savedForm?.email || "",
-    phone: verifiedPhone || savedForm?.phone || "",
+    email: verifiedEmail || savedForm?.email || "",
+    phone: savedForm?.phone || "",
     altPhone: savedForm?.altPhone || "",
     age: savedForm?.age || "",
     gender: savedForm?.gender || "male",
