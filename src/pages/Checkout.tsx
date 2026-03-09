@@ -390,9 +390,36 @@ const Checkout = () => {
         }
       }
 
+      // Auto-register user if not logged in
+      if (!user && form.email) {
+        try {
+          const tempPassword = crypto.randomUUID() + "!Aa1";
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: form.email,
+            password: tempPassword,
+            options: {
+              data: { full_name: form.name, phone: form.phone },
+              emailRedirectTo: `${window.location.origin}/set-password`,
+            },
+          });
+
+          if (!signUpError) {
+            // Send activation email (password reset link)
+            await supabase.auth.resetPasswordForEmail(form.email, {
+              redirectTo: `${window.location.origin}/set-password`,
+            });
+            // Sign out since they created account with temp password
+            await supabase.auth.signOut();
+          }
+        } catch (regErr) {
+          console.error("Auto-registration error:", regErr);
+          // Don't block order success for registration errors
+        }
+      }
+
       toast({
         title: "Order placed successfully! 🎉",
-        description: `Order ${order.order_number} received.${enabledGateways.length === 0 ? " You will receive payment details via WhatsApp shortly." : " Payment confirmed!"}`,
+        description: `Order ${order.order_number} received.${!user ? " We've sent you an email to set up your account password." : ""}${enabledGateways.length === 0 ? " Payment details will be shared via WhatsApp." : " Payment confirmed!"}`,
       });
       clearCart();
       localStorage.removeItem("checkout_form");
