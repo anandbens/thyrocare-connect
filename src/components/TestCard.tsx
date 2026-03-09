@@ -29,7 +29,7 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
         <Link to={`/tests/${test.id}`} className="block">
           <div className="relative h-40 overflow-hidden bg-muted">
             <img
-              src={test.image_url || defaultTestImage}
+              src={getTestImage(test)}
               alt={test.name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"

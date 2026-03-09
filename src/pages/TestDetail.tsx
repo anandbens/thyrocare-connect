@@ -84,7 +84,7 @@ const TestDetail = () => {
               {/* Test Banner Image */}
               <div className="rounded-2xl overflow-hidden shadow-lg">
                 <img
-                  src={test.image_url || defaultTestImage}
+                  src={getTestImage(test)}
                   alt={test.name}
                   className="w-full h-48 sm:h-64 object-cover"
                 />
