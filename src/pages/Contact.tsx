@@ -30,9 +30,9 @@ const Contact = () => {
           <div className="grid lg:grid-cols-2 gap-10">
             <div className="space-y-6">
               {[
-                { icon: Phone, label: "Phone", value: "+91 98765 43210" },
+                { icon: Phone, label: "Phone", value: "04652 404 004" },
                 { icon: Mail, label: "Email", value: "info@danielclinic.com" },
-                { icon: MapPin, label: "Address", value: "123, Main Road, Madurai, Tamil Nadu - 625001" },
+                { icon: MapPin, label: "Address", value: "WCC Junction, Distillery Road (SBI Road), Vadasery, Opp. Johnson Opticals, Nagercoil, Tamil Nadu - 629001" },
                 { icon: Clock, label: "Working Hours", value: "Mon - Sat: 7:00 AM - 8:00 PM" },
               ].map((item) => (
                 <div key={item.label} className="flex items-start gap-4">
