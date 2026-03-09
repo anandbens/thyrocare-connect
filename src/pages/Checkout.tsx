@@ -61,8 +61,9 @@ const Checkout = () => {
     if (!verifiedPhone) return;
     const fetchExistingData = async () => {
       // First check profiles table for user info via secure RPC
-      const { data: profileData } = await supabase
+      const { data: rawProfile } = await supabase
         .rpc("get_profile_by_phone", { p_phone: verifiedPhone });
+      const profileData = rawProfile as { full_name?: string; email?: string; phone?: string } | null;
 
       // Then check previous orders for address and additional details
       const { data: existingOrders } = await supabase
