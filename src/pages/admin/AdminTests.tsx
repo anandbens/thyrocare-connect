@@ -233,6 +233,16 @@ const AdminTests = () => {
             <div className="space-y-2"><Label>Price (₹) *</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
             <div className="space-y-2"><Label>Original Price (MRP ₹) *</Label><Input type="number" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: Number(e.target.value) })} /></div>
             <div className="space-y-2"><Label>Turnaround Time</Label><Input value={form.turnaround || ""} onChange={(e) => setForm({ ...form, turnaround: e.target.value })} /></div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Banner Image URL</Label>
+              <Input value={form.image_url || ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://example.com/image.jpg" />
+              {form.image_url && (
+                <div className="mt-2 rounded-lg overflow-hidden border h-32 w-48">
+                  <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">Paste an image URL for the test tile and detail page. Leave empty for default image.</p>
+            </div>
             <div className="space-y-2 sm:col-span-2"><Label>Parameters (comma separated — used when no groups below)</Label><Textarea value={paramsText} onChange={(e) => setParamsText(e.target.value)} placeholder="e.g., T3, T4, TSH" /></div>
             
             {/* Grouped Parameters */}
