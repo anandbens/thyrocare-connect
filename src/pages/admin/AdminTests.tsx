@@ -24,7 +24,7 @@ const emptyTest = {
   parameters_list: [] as string[], parameters_grouped: [] as ParamGroup[],
   price: 0, original_price: 0,
   is_popular: false, turnaround: "24-48 hours", fasting_required: false,
-  sample_type: "Blood", is_active: true,
+  sample_type: "Blood", is_active: true, image_url: "",
 };
 
 const AdminTests = () => {
