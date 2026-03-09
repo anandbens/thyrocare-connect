@@ -23,7 +23,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const verifiedPhone = (location.state as any)?.verifiedPhone || "";
+  const verifiedEmail = (location.state as any)?.verifiedEmail || "";
 
   const savedForm = (() => {
     try {
@@ -34,8 +34,8 @@ const Checkout = () => {
 
   const [form, setForm] = useState({
     name: savedForm?.name || "",
-    email: savedForm?.email || "",
-    phone: verifiedPhone || savedForm?.phone || "",
+    email: verifiedEmail || savedForm?.email || "",
+    phone: savedForm?.phone || "",
     altPhone: savedForm?.altPhone || "",
     age: savedForm?.age || "",
     gender: savedForm?.gender || "male",
@@ -81,20 +81,22 @@ const Checkout = () => {
     fetchGateways();
   }, []);
 
-  // Auto-populate from profile and existing orders if phone matches
+  // Auto-populate from profile and existing orders if email matches
   useEffect(() => {
-    if (!verifiedPhone) return;
+    if (!verifiedEmail) return;
     const fetchExistingData = async () => {
-      // First check profiles table for user info via secure RPC
-      const { data: rawProfile } = await supabase
-        .rpc("get_profile_by_phone", { p_phone: verifiedPhone });
-      const profileData = rawProfile as { full_name?: string; email?: string; phone?: string } | null;
+      // Check profiles table for user info by email
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("email", verifiedEmail)
+        .maybeSingle();
 
       // Then check previous orders for address and additional details
       const { data: existingOrders } = await supabase
         .from("orders")
         .select("*")
-        .eq("customer_phone", verifiedPhone)
+        .eq("customer_email", verifiedEmail)
         .order("created_at", { ascending: false })
         .limit(1);
 
@@ -104,8 +106,8 @@ const Checkout = () => {
         setForm((prev) => ({
           ...prev,
           name: profileData?.full_name || o?.customer_name || prev.name,
-          email: profileData?.email || o?.customer_email || prev.email,
-          phone: verifiedPhone,
+          email: verifiedEmail,
+          phone: profileData?.phone || o?.customer_phone || prev.phone,
           altPhone: o?.alt_phone || "",
           age: o?.age?.toString() || "",
           gender: o?.gender || "male",
@@ -120,7 +122,7 @@ const Checkout = () => {
       }
     };
     fetchExistingData();
-  }, [verifiedPhone]);
+  }, [verifiedEmail]);
 
   const districtAreas: Record<string, string[]> = {
     Nagercoil: ["Nagercoil Town", "Kottar", "Vadasery", "Eraniel", "Colachel", "Marthandam", "Thuckalay", "Kuzhithurai"],
@@ -388,9 +390,36 @@ const Checkout = () => {
         }
       }
 
+      // Auto-register user if not logged in
+      if (!user && form.email) {
+        try {
+          const tempPassword = crypto.randomUUID() + "!Aa1";
+          const { error: signUpError } = await supabase.auth.signUp({
+            email: form.email,
+            password: tempPassword,
+            options: {
+              data: { full_name: form.name, phone: form.phone },
+              emailRedirectTo: `${window.location.origin}/set-password`,
+            },
+          });
+
+          if (!signUpError) {
+            // Send activation email (password reset link)
+            await supabase.auth.resetPasswordForEmail(form.email, {
+              redirectTo: `${window.location.origin}/set-password`,
+            });
+            // Sign out since they created account with temp password
+            await supabase.auth.signOut();
+          }
+        } catch (regErr) {
+          console.error("Auto-registration error:", regErr);
+          // Don't block order success for registration errors
+        }
+      }
+
       toast({
         title: "Order placed successfully! 🎉",
-        description: `Order ${order.order_number} received.${enabledGateways.length === 0 ? " You will receive payment details via WhatsApp shortly." : " Payment confirmed!"}`,
+        description: `Order ${order.order_number} received.${!user ? " We've sent you an email to set up your account password." : ""}${enabledGateways.length === 0 ? " Payment details will be shared via WhatsApp." : " Payment confirmed!"}`,
       });
       clearCart();
       localStorage.removeItem("checkout_form");
@@ -454,14 +483,12 @@ const Checkout = () => {
                         value={form.phone}
                         onChange={(e) => update("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
                         placeholder="10-digit mobile number"
-                        readOnly={!!verifiedPhone}
-                        className={verifiedPhone ? "bg-muted" : ""}
                       />
                       {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="email">Email *</Label>
-                      <Input id="email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@example.com" readOnly={isExistingUser} className={isExistingUser ? "bg-muted" : ""} />
+                      <Input id="email" required type="email" value={form.email} onChange={(e) => update("email", e.target.value)} placeholder="email@example.com" readOnly={!!verifiedEmail} className={verifiedEmail ? "bg-muted" : ""} />
                       {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                     </div>
                     <div className="space-y-2">
