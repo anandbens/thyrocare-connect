@@ -309,6 +309,64 @@ const AdminOrders = () => {
                     <div className="flex gap-1">
                       <Dialog>
                         <DialogTrigger asChild>
+                          <Button size="sm" variant="outline" className="h-8 text-xs">
+                            <Eye className="h-3.5 w-3.5 mr-1" /> View
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-lg">
+                          <DialogHeader>
+                            <DialogTitle className="font-display">Order Details — {order.order_number}</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 text-sm">
+                            <div className="grid grid-cols-2 gap-3">
+                              <div><span className="text-muted-foreground">Customer:</span> {order.customer_name}</div>
+                              <div><span className="text-muted-foreground">Phone:</span> {order.customer_phone}</div>
+                              <div><span className="text-muted-foreground">Email:</span> {order.customer_email}</div>
+                              <div><span className="text-muted-foreground">Date:</span> {new Date(order.created_at).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</div>
+                            </div>
+                            <div className="border-t pt-3">
+                              <p className="font-medium mb-2">Tests</p>
+                              {order.order_items?.map((item: any) => (
+                                <div key={item.id} className="flex justify-between py-1">
+                                  <span>{item.test_name}</span>
+                                  <span>₹{item.price}</span>
+                                </div>
+                              ))}
+                              <div className="flex justify-between font-semibold pt-2 border-t mt-2">
+                                <span>Total</span>
+                                <span>₹{order.total_amount}</span>
+                              </div>
+                            </div>
+                            <div className="border-t pt-3">
+                              <p className="font-medium mb-2 flex items-center gap-1.5"><CreditCard className="h-4 w-4" /> Payment Information</p>
+                              <div className="grid grid-cols-2 gap-2 text-sm">
+                                <div><span className="text-muted-foreground">Status:</span> <Badge className={paymentColors[order.payment_status] || ""} variant="secondary">{order.payment_status}</Badge></div>
+                                <div><span className="text-muted-foreground">Type:</span> <span className="capitalize">{order.payment_type || "—"}</span></div>
+                                <div>
+                                  <span className="text-muted-foreground">Gateway:</span>{" "}
+                                  {order.payment_id
+                                    ? order.payment_id.startsWith("razorpay_") ? <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Razorpay</Badge>
+                                    : order.payment_id.startsWith("phonepe_") ? <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">PhonePe</Badge>
+                                    : order.payment_id.startsWith("cashfree_") ? <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">Cashfree</Badge>
+                                    : <span>—</span>
+                                    : <span className="text-muted-foreground">—</span>
+                                  }
+                                </div>
+                                <div className="col-span-2">
+                                  <span className="text-muted-foreground">Reference ID:</span>{" "}
+                                  <span className="font-mono text-xs break-all">{order.payment_id || "—"}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="border-t pt-3">
+                              <p className="font-medium mb-2">Address</p>
+                              <p className="text-muted-foreground">{order.address1}{order.address2 ? `, ${order.address2}` : ""}, {order.area}, {order.district} - {order.pincode}</p>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      <Dialog>
+                        <DialogTrigger asChild>
                           <Button
                             size="sm"
                             variant="outline"
