@@ -21,10 +21,10 @@ const Login = () => {
   const [signupName, setSignupName] = useState("");
   const [signupPhone, setSignupPhone] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
-  const [signupPassword, setSignupPassword] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState("");
   const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [signupDone, setSignupDone] = useState(false);
 
   if (user) {
     if (isAdmin) navigate("/admin");
@@ -43,12 +43,11 @@ const Login = () => {
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!signupEmail || !signupName || !signupPassword || !signupPhone) {
+    if (!signupEmail || !signupName || !signupPhone) {
       toast({ title: "Please fill all fields", variant: "destructive" });
       return;
     }
     setLoading(true);
-    // Generate OTP
     const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
@@ -70,7 +69,6 @@ const Login = () => {
 
   const handleVerifyAndSignup = async () => {
     setVerifyingOtp(true);
-    // Verify OTP
     const { data: otpData, error: otpError } = await supabase
       .from("otp_logs")
       .select("*")
@@ -92,15 +90,29 @@ const Login = () => {
     // Mark OTP as verified
     await supabase.from("otp_logs").update({ is_verified: true }).eq("id", otpData.id);
 
-    // Now create the account
-    const { error } = await signUp(signupEmail, signupPassword, signupName, signupPhone);
+    // Create account with a random temporary password (user will set real password via activation link)
+    const tempPassword = crypto.randomUUID() + "!Aa1";
+    const { error } = await signUp(signupEmail, tempPassword, signupName, signupPhone);
     if (error) {
       toast({ title: "Sign up failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Account created!", description: "Please check your email to verify your account." });
-      setOtpSent(false);
-      setOtp("");
+      setVerifyingOtp(false);
+      return;
     }
+
+    // Send activation email (password reset link) so user can set their own password
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(signupEmail, {
+      redirectTo: `${window.location.origin}/set-password`,
+    });
+
+    if (resetError) {
+      toast({ title: "Account created", description: "But we couldn't send the activation email. Please use 'Forgot Password' to set your password.", variant: "destructive" });
+    } else {
+      setSignupDone(true);
+      toast({ title: "Account created!", description: "Check your email for the activation link to set your password." });
+    }
+
+    // Sign out since they need to activate first
+    await supabase.auth.signOut();
     setVerifyingOtp(false);
   };
 
@@ -136,11 +148,29 @@ const Login = () => {
                     <Button type="submit" className="w-full rounded-xl" disabled={loading}>
                       {loading ? "Signing in..." : "Sign In"}
                     </Button>
+                    <div className="text-center">
+                      <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                        Forgot your password?
+                      </Link>
+                    </div>
                   </form>
                 </TabsContent>
 
                 <TabsContent value="signup">
-                  {!otpSent ? (
+                  {signupDone ? (
+                    <div className="text-center space-y-4 py-4">
+                      <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto">
+                        <span className="text-3xl">✉️</span>
+                      </div>
+                      <h3 className="font-display font-semibold text-lg text-foreground">Check Your Email!</h3>
+                      <p className="text-sm text-muted-foreground">
+                        We've sent an activation link to <strong>{signupEmail}</strong>. Click the link to set your password and activate your account.
+                      </p>
+                      <Button variant="ghost" size="sm" onClick={() => { setSignupDone(false); setOtpSent(false); setOtp(""); }}>
+                        Register another account
+                      </Button>
+                    </div>
+                  ) : !otpSent ? (
                     <form onSubmit={handleSendOtp} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="signup-name">Full Name</Label>
@@ -154,10 +184,9 @@ const Login = () => {
                         <Label htmlFor="signup-email">Email</Label>
                         <Input id="signup-email" type="email" required value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="email@example.com" />
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="signup-password">Password</Label>
-                        <Input id="signup-password" type="password" required minLength={6} value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} placeholder="••••••••" />
-                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        After registration, you'll receive an activation email to set your password.
+                      </p>
                       <Button type="submit" className="w-full rounded-xl" disabled={loading}>
                         {loading ? "Sending OTP..." : "Send Verification OTP"}
                       </Button>
@@ -185,7 +214,7 @@ const Login = () => {
                         disabled={otp.length !== 6 || verifyingOtp}
                         onClick={handleVerifyAndSignup}
                       >
-                        {verifyingOtp ? "Verifying..." : "Verify & Create Account"}
+                        {verifyingOtp ? "Creating account..." : "Verify & Create Account"}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={() => { setOtpSent(false); setOtp(""); }}>
                         ← Back to form

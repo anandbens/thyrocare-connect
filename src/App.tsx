@@ -12,10 +12,11 @@ import TestDetail from "./pages/TestDetail";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import SetPassword from "./pages/SetPassword";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
-import VerifyOtp from "./pages/VerifyOtp";
 import Dashboard from "./pages/dashboard/Dashboard";
 import UserOrders from "./pages/dashboard/UserOrders";
 import UserReports from "./pages/dashboard/UserReports";
@@ -51,8 +52,10 @@ const App = () => (
                 <Route path="/tests/:id" element={<TestDetail />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
-                <Route path="/verify-otp" element={<VerifyOtp />} />
+                <Route path="/verify-otp" element={<SetPassword />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/set-password" element={<SetPassword />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 {/* User Dashboard Routes */}
