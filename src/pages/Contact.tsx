@@ -30,8 +30,8 @@ const Contact = () => {
           <div className="grid lg:grid-cols-2 gap-10">
             <div className="space-y-6">
               {[
-                { icon: Phone, label: "Phone", value: "04652 404 004" },
-                { icon: Mail, label: "Email", value: "info@danielclinic.com" },
+                { icon: Phone, label: "Phone", value: "7010 737 378" },
+                { icon: Mail, label: "Email", value: "drmoses2003@yahoo.co.in" },
                 { icon: MapPin, label: "Address", value: "WCC Junction, Distillery Road (SBI Road), Vadasery, Opp. Johnson Opticals, Nagercoil, Tamil Nadu - 629001" },
                 { icon: Clock, label: "Working Hours", value: "Mon - Sat: 7:00 AM - 8:00 PM" },
               ].map((item) => (
