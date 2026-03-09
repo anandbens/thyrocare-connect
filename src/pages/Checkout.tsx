@@ -56,6 +56,29 @@ const Checkout = () => {
   }, [form]);
 
   const [isExistingUser, setIsExistingUser] = useState(false);
+  const [enabledGateways, setEnabledGateways] = useState<EnabledGateway[]>([]);
+  const [selectedGateway, setSelectedGateway] = useState<string>("");
+
+  // Fetch enabled payment gateways
+  useEffect(() => {
+    const fetchGateways = async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("setting_value")
+        .eq("setting_key", "payment_gateways")
+        .maybeSingle();
+      if (data?.setting_value) {
+        const gw = data.setting_value as any;
+        const enabled: EnabledGateway[] = [];
+        if (gw.razorpay?.enabled && gw.razorpay?.key_id) enabled.push({ key: "razorpay", label: "Razorpay" });
+        if (gw.phonepe?.enabled && gw.phonepe?.client_id) enabled.push({ key: "phonepe", label: "PhonePe" });
+        if (gw.cashfree?.enabled && gw.cashfree?.app_id) enabled.push({ key: "cashfree", label: "Cashfree" });
+        setEnabledGateways(enabled);
+        if (enabled.length === 1) setSelectedGateway(enabled[0].key);
+      }
+    };
+    fetchGateways();
+  }, []);
 
   // Auto-populate from profile and existing orders if phone matches
   useEffect(() => {
