@@ -52,15 +52,15 @@ const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <Phone className="h-4 w-4 mt-0.5 text-[hsl(4,76%,61%)]" />
-                <span className="text-white/50">+91 98765 43210</span>
+                <a href="tel:04652404004" className="text-white/50 hover:text-white transition-colors">04652 404 004</a>
               </li>
               <li className="flex items-start gap-2">
                 <Mail className="h-4 w-4 mt-0.5 text-[hsl(4,76%,61%)]" />
-                <span className="text-white/50">info@danielclinic.com</span>
+                <a href="mailto:info@danielclinic.com" className="text-white/50 hover:text-white transition-colors">info@danielclinic.com</a>
               </li>
               <li className="flex items-start gap-2">
                 <MapPin className="h-4 w-4 mt-0.5 text-[hsl(4,76%,61%)]" />
-                <span className="text-white/50">123, Main Road, Madurai, Tamil Nadu - 625001</span>
+                <span className="text-white/50">WCC Junction, Distillery Road (SBI Road), Vadasery, Opp. Johnson Opticals, Nagercoil, Tamil Nadu - 629001</span>
               </li>
             </ul>
           </div>
