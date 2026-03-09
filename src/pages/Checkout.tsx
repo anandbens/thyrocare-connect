@@ -23,7 +23,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const verifiedPhone = (location.state as any)?.verifiedPhone || "";
+  const verifiedEmail = (location.state as any)?.verifiedEmail || "";
 
   const savedForm = (() => {
     try {
