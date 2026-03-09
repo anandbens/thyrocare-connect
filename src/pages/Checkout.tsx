@@ -369,6 +369,8 @@ const Checkout = () => {
                         value={form.age}
                         onChange={(e) => update("age", e.target.value.replace(/\D/g, "").slice(0, 2))}
                         placeholder="Age (1-99)"
+                        readOnly={isExistingUser && !!form.age}
+                        className={isExistingUser && !!form.age ? "bg-muted" : ""}
                       />
                       {errors.age && <p className="text-sm text-destructive">{errors.age}</p>}
                     </div>
