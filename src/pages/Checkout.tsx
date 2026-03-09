@@ -331,7 +331,6 @@ const Checkout = () => {
     const returnUrl = `${window.location.origin}/dashboard/orders?payment=success`;
     const { data, error } = await supabase.functions.invoke("create-cashfree-order", {
       body: {
-        amount: totalAmount,
         order_id: order.id,
         customer_name: form.name,
         customer_email: form.email,

@@ -84,12 +84,12 @@ const AdminSettings = () => {
         const paymentCollectionSetting = data.find((s) => s.setting_key === "payment_collection");
         const smtpSetting = data.find((s) => s.setting_key === "smtp_config");
         const smsSetting = data.find((s) => s.setting_key === "sms_gateway");
-        const gatewaySetting = data.find((s) => s.setting_key === "payment_gateways");
-        if (paymentCollectionSetting?.setting_value) setPaymentCollection(paymentCollectionSetting.setting_value as any);
-        if (smtpSetting?.setting_value) setSmtp(smtpSetting.setting_value as any);
-        if (smsSetting?.setting_value) setSms(smsSetting.setting_value as any);
-        if (gatewaySetting?.setting_value) {
-          setGateways({ ...defaultGatewayConfig, ...(gatewaySetting.setting_value as any) });
+        const gatewaySetting = data.find((s) => s.setting_key === "payment_gateways_secret");
+        // Fallback to old key for migration
+        const gatewayFallback = !gatewaySetting ? data.find((s) => s.setting_key === "payment_gateways") : null;
+        const gwData = gatewaySetting || gatewayFallback;
+        if (gwData?.setting_value) {
+          setGateways({ ...defaultGatewayConfig, ...(gwData.setting_value as any) });
         }
       }
     };
