@@ -590,6 +590,7 @@ export type Database = {
             }
             Returns: Json
           }
+      get_profile_by_phone: { Args: { p_phone: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
