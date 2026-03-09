@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { LabTest } from "@/data/tests";
 import { useCart } from "@/context/CartContext";
 import { Link } from "react-router-dom";
+import { getTestImage } from "@/lib/testImages";
 
 interface TestCardProps {
   test: LabTest;
@@ -24,41 +25,55 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
       transition={{ delay: index * 0.05, duration: 0.4 }}
     >
       <Card className="group h-full hover:-translate-y-1 transition-all duration-300 border-border/60 hover:border-primary/30 overflow-hidden" style={{ boxShadow: "var(--card-shadow)" }}>
-        <CardContent className="p-5 flex flex-col h-full">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex-1">
-              {test.is_popular && (
-                <Badge className="bg-accent/15 text-accent-foreground border-accent/30 text-xs mb-2">
+        {/* Test Image */}
+        <Link to={`/tests/${test.id}`} className="block">
+          <div className="relative h-40 overflow-hidden bg-muted">
+            <img
+              src={getTestImage(test)}
+              alt={test.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              loading="lazy"
+            />
+            {discount > 0 && (
+              <div className="absolute top-2 right-2">
+                <Badge className="bg-destructive text-destructive-foreground text-xs font-bold shadow-md">
+                  {discount}% OFF
+                </Badge>
+              </div>
+            )}
+            {test.is_popular && (
+              <div className="absolute top-2 left-2">
+                <Badge className="bg-accent/90 text-accent-foreground text-xs shadow-md">
                   ⭐ Popular
                 </Badge>
-              )}
-              <Link to={`/tests/${test.id}`}>
-                <h3 className="font-display font-semibold text-base lg:text-lg text-foreground group-hover:text-primary transition-colors leading-snug">
-                  {test.name}
-                </h3>
-              </Link>
-            </div>
-            <Badge variant="secondary" className="text-sm ml-2 shrink-0">
-              {test.parameters || 0} params
-            </Badge>
+              </div>
+            )}
           </div>
+        </Link>
 
-          <p className="text-sm lg:text-base text-muted-foreground mb-4 line-clamp-2 flex-1">
+        <CardContent className="p-5 flex flex-col flex-1">
+          <Link to={`/tests/${test.id}`}>
+            <h3 className="font-display font-semibold text-base lg:text-lg text-foreground group-hover:text-primary transition-colors leading-snug mb-2">
+              {test.name}
+            </h3>
+          </Link>
+
+          <p className="text-sm text-muted-foreground mb-4 line-clamp-2 flex-1">
             {test.description}
           </p>
 
-          <div className="flex items-center gap-3 text-sm text-muted-foreground mb-4">
-            <span className="flex items-center gap-1.5">
-              <Clock className="h-4 w-4" />
-              {test.turnaround || "24-48 hours"}
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mb-4">
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5" />
+              {test.turnaround || "24-48 hrs"}
             </span>
-            <span className="flex items-center gap-1.5">
-              <Droplets className="h-4 w-4" />
+            <span className="flex items-center gap-1">
+              <Droplets className="h-3.5 w-3.5" />
               {test.sample_type || "Blood"}
             </span>
-            {test.fasting_required && (
-              <Badge variant="outline" className="text-xs px-1.5 py-0">
-                Fasting
+            {test.parameters && (
+              <Badge variant="secondary" className="text-xs">
+                {test.parameters} params
               </Badge>
             )}
           </div>
@@ -69,7 +84,6 @@ const TestCard = ({ test, index = 0 }: TestCardProps) => {
                 <span className="text-xl font-bold text-foreground">₹{test.price}</span>
                 <span className="text-sm text-muted-foreground line-through">₹{test.original_price}</span>
               </div>
-              <span className="text-xs font-medium text-primary">{discount}% off</span>
             </div>
             <Button
               size="sm"

@@ -22,6 +22,7 @@ export interface LabTest {
   fasting_required: boolean | null;
   sample_type: string | null;
   is_active: boolean | null;
+  image_url: string | null;
   test_categories?: { name: string; id: string } | null;
 }
 

@@ -24,7 +24,7 @@ const emptyTest = {
   parameters_list: [] as string[], parameters_grouped: [] as ParamGroup[],
   price: 0, original_price: 0,
   is_popular: false, turnaround: "24-48 hours", fasting_required: false,
-  sample_type: "Blood", is_active: true,
+  sample_type: "Blood", is_active: true, image_url: "",
 };
 
 const AdminTests = () => {
@@ -111,6 +111,7 @@ const AdminTests = () => {
       price: Number(form.price), original_price: Number(form.original_price),
       is_popular: form.is_popular, turnaround: form.turnaround,
       fasting_required: form.fasting_required, sample_type: form.sample_type, is_active: form.is_active,
+      image_url: form.image_url || null,
     };
     let error;
     if (editing) ({ error } = await supabase.from("lab_tests").update(payload).eq("id", form.id));
@@ -232,6 +233,16 @@ const AdminTests = () => {
             <div className="space-y-2"><Label>Price (₹) *</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} /></div>
             <div className="space-y-2"><Label>Original Price (MRP ₹) *</Label><Input type="number" value={form.original_price} onChange={(e) => setForm({ ...form, original_price: Number(e.target.value) })} /></div>
             <div className="space-y-2"><Label>Turnaround Time</Label><Input value={form.turnaround || ""} onChange={(e) => setForm({ ...form, turnaround: e.target.value })} /></div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Banner Image URL</Label>
+              <Input value={form.image_url || ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} placeholder="https://example.com/image.jpg" />
+              {form.image_url && (
+                <div className="mt-2 rounded-lg overflow-hidden border h-32 w-48">
+                  <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">Paste an image URL for the test tile and detail page. Leave empty for default image.</p>
+            </div>
             <div className="space-y-2 sm:col-span-2"><Label>Parameters (comma separated — used when no groups below)</Label><Textarea value={paramsText} onChange={(e) => setParamsText(e.target.value)} placeholder="e.g., T3, T4, TSH" /></div>
             
             {/* Grouped Parameters */}
