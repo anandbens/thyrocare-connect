@@ -81,20 +81,22 @@ const Checkout = () => {
     fetchGateways();
   }, []);
 
-  // Auto-populate from profile and existing orders if phone matches
+  // Auto-populate from profile and existing orders if email matches
   useEffect(() => {
-    if (!verifiedPhone) return;
+    if (!verifiedEmail) return;
     const fetchExistingData = async () => {
-      // First check profiles table for user info via secure RPC
-      const { data: rawProfile } = await supabase
-        .rpc("get_profile_by_phone", { p_phone: verifiedPhone });
-      const profileData = rawProfile as { full_name?: string; email?: string; phone?: string } | null;
+      // Check profiles table for user info by email
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("email", verifiedEmail)
+        .maybeSingle();
 
       // Then check previous orders for address and additional details
       const { data: existingOrders } = await supabase
         .from("orders")
         .select("*")
-        .eq("customer_phone", verifiedPhone)
+        .eq("customer_email", verifiedEmail)
         .order("created_at", { ascending: false })
         .limit(1);
 
@@ -104,8 +106,8 @@ const Checkout = () => {
         setForm((prev) => ({
           ...prev,
           name: profileData?.full_name || o?.customer_name || prev.name,
-          email: profileData?.email || o?.customer_email || prev.email,
-          phone: verifiedPhone,
+          email: verifiedEmail,
+          phone: profileData?.phone || o?.customer_phone || prev.phone,
           altPhone: o?.alt_phone || "",
           age: o?.age?.toString() || "",
           gender: o?.gender || "male",
@@ -120,7 +122,7 @@ const Checkout = () => {
       }
     };
     fetchExistingData();
-  }, [verifiedPhone]);
+  }, [verifiedEmail]);
 
   const districtAreas: Record<string, string[]> = {
     Nagercoil: ["Nagercoil Town", "Kottar", "Vadasery", "Eraniel", "Colachel", "Marthandam", "Thuckalay", "Kuzhithurai"],
