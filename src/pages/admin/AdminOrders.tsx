@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { buildSafeCsv, downloadCsv } from "@/lib/csvSanitize";
-import { Download, Search, MessageCircle } from "lucide-react";
+import { Download, Search, MessageCircle, Eye, CreditCard } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
