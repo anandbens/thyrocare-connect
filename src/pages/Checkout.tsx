@@ -62,17 +62,18 @@ const Checkout = () => {
   // Fetch enabled payment gateways
   useEffect(() => {
     const fetchGateways = async () => {
+      // Read from public key (no secrets exposed)
       const { data } = await supabase
         .from("site_settings")
         .select("setting_value")
-        .eq("setting_key", "payment_gateways")
+        .eq("setting_key", "payment_gateways_public")
         .maybeSingle();
       if (data?.setting_value) {
         const gw = data.setting_value as any;
         const enabled: EnabledGateway[] = [];
-        if (gw.razorpay?.enabled && gw.razorpay?.key_id) enabled.push({ key: "razorpay", label: "Razorpay" });
-        if (gw.phonepe?.enabled && gw.phonepe?.client_id) enabled.push({ key: "phonepe", label: "PhonePe" });
-        if (gw.cashfree?.enabled && gw.cashfree?.app_id) enabled.push({ key: "cashfree", label: "Cashfree" });
+        if (gw.razorpay?.enabled) enabled.push({ key: "razorpay", label: "Razorpay" });
+        if (gw.phonepe?.enabled) enabled.push({ key: "phonepe", label: "PhonePe" });
+        if (gw.cashfree?.enabled) enabled.push({ key: "cashfree", label: "Cashfree" });
         setEnabledGateways(enabled);
         if (enabled.length === 1) setSelectedGateway(enabled[0].key);
       }
@@ -282,7 +283,7 @@ const Checkout = () => {
 
   const processRazorpay = async (order: any) => {
     const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
-      body: { amount: totalAmount, currency: "INR", receipt: order.order_number, notes: { order_id: order.id } },
+      body: { order_id: order.id },
     });
     if (error || !data?.order_id) throw new Error("Failed to create Razorpay order");
 
@@ -319,7 +320,7 @@ const Checkout = () => {
   const processPhonePe = async (order: any) => {
     const redirectUrl = `${window.location.origin}/dashboard/orders?payment=success`;
     const { data, error } = await supabase.functions.invoke("create-phonepe-order", {
-      body: { amount: totalAmount, order_id: order.id, redirect_url: redirectUrl },
+      body: { order_id: order.id, redirect_url: redirectUrl },
     });
     if (error || !data?.redirect_url) throw new Error("Failed to create PhonePe payment");
     // Redirect to PhonePe checkout
@@ -330,7 +331,6 @@ const Checkout = () => {
     const returnUrl = `${window.location.origin}/dashboard/orders?payment=success`;
     const { data, error } = await supabase.functions.invoke("create-cashfree-order", {
       body: {
-        amount: totalAmount,
         order_id: order.id,
         customer_name: form.name,
         customer_email: form.email,

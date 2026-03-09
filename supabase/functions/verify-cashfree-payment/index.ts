@@ -20,7 +20,7 @@ serve(async (req) => {
     const { data: settingsData } = await supabase
       .from("site_settings")
       .select("setting_value")
-      .eq("setting_key", "payment_gateways")
+      .eq("setting_key", "payment_gateways_secret")
       .single();
 
     const gateways = settingsData?.setting_value as any;
@@ -56,7 +56,6 @@ serve(async (req) => {
       ? "https://sandbox.cashfree.com/pg"
       : "https://api.cashfree.com/pg";
 
-    // Check order status
     const statusResponse = await fetch(`${baseUrl}/orders/${cf_order_id}`, {
       headers: {
         "x-client-id": config.app_id,

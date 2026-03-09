@@ -84,12 +84,14 @@ const AdminSettings = () => {
         const paymentCollectionSetting = data.find((s) => s.setting_key === "payment_collection");
         const smtpSetting = data.find((s) => s.setting_key === "smtp_config");
         const smsSetting = data.find((s) => s.setting_key === "sms_gateway");
-        const gatewaySetting = data.find((s) => s.setting_key === "payment_gateways");
+        const gatewaySetting = data.find((s) => s.setting_key === "payment_gateways_secret");
+        const gatewayFallback = !gatewaySetting ? data.find((s) => s.setting_key === "payment_gateways") : null;
+        const gwData = gatewaySetting || gatewayFallback;
         if (paymentCollectionSetting?.setting_value) setPaymentCollection(paymentCollectionSetting.setting_value as any);
         if (smtpSetting?.setting_value) setSmtp(smtpSetting.setting_value as any);
         if (smsSetting?.setting_value) setSms(smsSetting.setting_value as any);
-        if (gatewaySetting?.setting_value) {
-          setGateways({ ...defaultGatewayConfig, ...(gatewaySetting.setting_value as any) });
+        if (gwData?.setting_value) {
+          setGateways({ ...defaultGatewayConfig, ...(gwData.setting_value as any) });
         }
       }
     };
@@ -329,7 +331,17 @@ const AdminSettings = () => {
             )}
           </Card>
 
-          <Button onClick={() => saveSetting("payment_gateways", gateways)} disabled={loading}>
+          <Button onClick={() => {
+            // Save full config (with secrets) to protected key
+            saveSetting("payment_gateways_secret", gateways);
+            // Save public-only config (no secrets) for frontend
+            const publicConfig = {
+              razorpay: { enabled: gateways.razorpay.enabled, is_sandbox: gateways.razorpay.is_sandbox, key_id: gateways.razorpay.key_id },
+              phonepe: { enabled: gateways.phonepe.enabled, is_sandbox: gateways.phonepe.is_sandbox, client_id: gateways.phonepe.client_id },
+              cashfree: { enabled: gateways.cashfree.enabled, is_sandbox: gateways.cashfree.is_sandbox, app_id: gateways.cashfree.app_id },
+            };
+            saveSetting("payment_gateways_public", publicConfig);
+          }} disabled={loading}>
             <Save className="h-4 w-4 mr-2" /> Save Payment Gateway Settings
           </Button>
         </TabsContent>

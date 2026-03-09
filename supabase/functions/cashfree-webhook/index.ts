@@ -17,11 +17,10 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get Cashfree config for signature verification
     const { data: settingsData } = await supabase
       .from("site_settings")
       .select("setting_value")
-      .eq("setting_key", "payment_gateways")
+      .eq("setting_key", "payment_gateways_secret")
       .single();
 
     const gateways = settingsData?.setting_value as any;
@@ -71,7 +70,6 @@ serve(async (req) => {
 
     const eventType = payload.type;
     const orderData = payload.data?.order;
-    const paymentData = payload.data?.payment;
 
     if (!orderData) {
       return new Response(JSON.stringify({ ok: true, message: "No order data" }), {
@@ -80,10 +78,8 @@ serve(async (req) => {
       });
     }
 
-    // Extract our order_id from cf_order_id (format: cf_{order_id}_{timestamp})
     const cfOrderId = orderData.order_id || "";
     const parts = cfOrderId.split("_");
-    // cf_{uuid}_{timestamp} — uuid is parts[1]
     const orderId = parts.length >= 3 ? parts.slice(1, -1).join("_") : null;
 
     if (!orderId) {
@@ -102,14 +98,11 @@ serve(async (req) => {
         payment_id: `cashfree_${cfOrderId}`,
         order_status: "confirmed",
       }).eq("id", orderId);
-
-      console.log(`Order ${orderId} marked as paid via Cashfree webhook`);
     } else if (
       orderData.order_status === "EXPIRED" ||
       orderData.order_status === "TERMINATED" ||
       eventType === "PAYMENT_FAILED_WEBHOOK"
     ) {
-      // Only update if not already paid
       const { data: existingOrder } = await supabase
         .from("orders")
         .select("payment_status")
@@ -120,8 +113,6 @@ serve(async (req) => {
         await supabase.from("orders").update({
           payment_status: "failed",
         }).eq("id", orderId);
-
-        console.log(`Order ${orderId} marked as failed via Cashfree webhook`);
       }
     }
 

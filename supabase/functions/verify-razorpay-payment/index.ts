@@ -20,7 +20,7 @@ serve(async (req) => {
     const { data: settingsData } = await supabase
       .from("site_settings")
       .select("setting_value")
-      .eq("setting_key", "payment_gateways")
+      .eq("setting_key", "payment_gateways_secret")
       .single();
 
     const gateways = settingsData?.setting_value as any;
@@ -63,7 +63,7 @@ serve(async (req) => {
     if (order_id) {
       await supabase.from("orders").update({
         payment_status: "paid",
-        payment_id: razorpay_payment_id,
+        payment_id: `razorpay_${razorpay_payment_id}`,
         order_status: "confirmed",
       }).eq("id", order_id);
     }
