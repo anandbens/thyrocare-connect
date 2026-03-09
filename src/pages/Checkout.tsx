@@ -283,7 +283,7 @@ const Checkout = () => {
 
   const processRazorpay = async (order: any) => {
     const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
-      body: { amount: totalAmount, currency: "INR", receipt: order.order_number, notes: { order_id: order.id } },
+      body: { order_id: order.id },
     });
     if (error || !data?.order_id) throw new Error("Failed to create Razorpay order");
 
