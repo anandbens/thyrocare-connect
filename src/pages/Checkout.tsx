@@ -280,6 +280,78 @@ const Checkout = () => {
     return order;
   };
 
+  const processRazorpay = async (order: any) => {
+    const { data, error } = await supabase.functions.invoke("create-razorpay-order", {
+      body: { amount: totalAmount, currency: "INR", receipt: order.order_number, notes: { order_id: order.id } },
+    });
+    if (error || !data?.order_id) throw new Error("Failed to create Razorpay order");
+
+    return new Promise<void>((resolve, reject) => {
+      const options = {
+        key: data.key_id,
+        amount: Math.round(totalAmount * 100),
+        currency: "INR",
+        name: "Thyrocare Nagercoil",
+        description: `Order ${order.order_number}`,
+        order_id: data.order_id,
+        handler: async (response: any) => {
+          try {
+            const { data: verifyData, error: verifyError } = await supabase.functions.invoke("verify-razorpay-payment", {
+              body: {
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                order_id: order.id,
+              },
+            });
+            if (verifyError || !verifyData?.verified) reject(new Error("Payment verification failed"));
+            else resolve();
+          } catch (e) { reject(e); }
+        },
+        prefill: { name: form.name, email: form.email, contact: form.phone },
+        modal: { ondismiss: () => reject(new Error("Payment cancelled")) },
+      };
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+    });
+  };
+
+  const processPhonePe = async (order: any) => {
+    const redirectUrl = `${window.location.origin}/dashboard/orders?payment=success`;
+    const { data, error } = await supabase.functions.invoke("create-phonepe-order", {
+      body: { amount: totalAmount, order_id: order.id, redirect_url: redirectUrl },
+    });
+    if (error || !data?.redirect_url) throw new Error("Failed to create PhonePe payment");
+    // Redirect to PhonePe checkout
+    window.location.href = data.redirect_url;
+  };
+
+  const processCashfree = async (order: any) => {
+    const returnUrl = `${window.location.origin}/dashboard/orders?payment=success`;
+    const { data, error } = await supabase.functions.invoke("create-cashfree-order", {
+      body: {
+        amount: totalAmount,
+        order_id: order.id,
+        customer_name: form.name,
+        customer_email: form.email,
+        customer_phone: form.phone,
+        return_url: returnUrl,
+      },
+    });
+    if (error || !data?.payment_session_id) throw new Error("Failed to create Cashfree order");
+
+    // Use Cashfree JS SDK if available, otherwise redirect
+    const cashfree = (window as any).Cashfree;
+    if (cashfree) {
+      const cf = new cashfree({ mode: data.is_sandbox ? "sandbox" : "production" });
+      cf.checkout({ paymentSessionId: data.payment_session_id, redirectTarget: "_self" });
+    } else {
+      // Fallback: construct checkout URL
+      const checkoutBase = data.is_sandbox ? "https://sandbox.cashfree.com/pg/view/order" : "https://cashfree.com/pg/view/order";
+      window.location.href = `${checkoutBase}/${data.cf_order_id}`;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) return;
@@ -289,13 +361,36 @@ const Checkout = () => {
       return;
     }
 
+    // If payment gateways are enabled, require selection
+    if (enabledGateways.length > 0 && !selectedGateway) {
+      toast({ title: "Select a payment method", description: "Please choose a payment gateway.", variant: "destructive" });
+      return;
+    }
+
     setLoading(true);
     try {
       const order = await createOrder();
 
+      if (enabledGateways.length > 0 && selectedGateway) {
+        // Process online payment
+        if (selectedGateway === "razorpay") {
+          await processRazorpay(order);
+        } else if (selectedGateway === "phonepe") {
+          clearCart();
+          localStorage.removeItem("checkout_form");
+          await processPhonePe(order);
+          return; // PhonePe redirects away
+        } else if (selectedGateway === "cashfree") {
+          clearCart();
+          localStorage.removeItem("checkout_form");
+          await processCashfree(order);
+          return; // Cashfree redirects away
+        }
+      }
+
       toast({
         title: "Order placed successfully! 🎉",
-        description: `Order ${order.order_number} received. You will receive payment details via WhatsApp shortly.`,
+        description: `Order ${order.order_number} received.${enabledGateways.length === 0 ? " You will receive payment details via WhatsApp shortly." : " Payment confirmed!"}`,
       });
       clearCart();
       localStorage.removeItem("checkout_form");
