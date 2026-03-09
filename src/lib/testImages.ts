@@ -22,44 +22,90 @@ import mensHealth from "@/assets/test-mens-health.jpg";
 import arthritis from "@/assets/test-arthritis.jpg";
 import fullBody from "@/assets/test-full-body.jpg";
 import electrolyte from "@/assets/test-electrolyte.jpg";
+import lipid from "@/assets/test-lipid.jpg";
+import bone from "@/assets/test-bone.jpg";
+import pancreas from "@/assets/test-pancreas.jpg";
+import eye from "@/assets/test-eye.jpg";
+import immunity from "@/assets/test-immunity.jpg";
+import cancer from "@/assets/test-cancer.jpg";
+import glucose from "@/assets/test-glucose.jpg";
+import stool from "@/assets/test-stool.jpg";
 
-// Map test name keywords to specific fallback images — ordered by specificity
-const keywordImageMap: [string[], string][] = [
-  [["aarogyam", "family health", "health package"], aarogyamFamily],
-  [["full body", "comprehensive", "annual"], fullBody],
-  [["wellness", "preventive", "master"], familyHealth],
-  [["women", "female", "pcos", "pcod", "pregnancy", "prenatal", "antenatal"], womenHealth],
-  [["men", "male", "psa", "prostate"], mensHealth],
-  [["thyroid", "t3", "t4", "tsh"], thyroid],
-  [["diabetes", "sugar", "hba1c", "glucose", "glycosylated"], diabetes],
-  [["heart", "cardiac", "lipid", "cholesterol", "cardio", "ecg", "troponin"], heart],
-  [["vitamin", "vit d", "vit b", "b12", "25-oh", "folate", "folic"], vitamin],
-  [["kidney", "renal", "kft", "creatinine", "bun"], kidney],
-  [["liver", "hepatic", "lft", "sgpt", "sgot", "bilirubin", "hepatitis"], liver],
-  [["cbc", "complete blood count", "hemoglobin", "haemoglobin", "platelet", "wbc", "rbc"], cbc],
-  [["urine", "urinalysis"], urine],
-  [["hormone", "estrogen", "testosterone", "prolactin", "fertility", "lh", "fsh"], hormone],
-  [["allergy", "ige", "immunoglobulin", "food intolerance"], allergy],
-  [["senior", "elderly", "geriatric", "old age", "50+", "60+"], seniorHealth],
-  [["fever", "dengue", "malaria", "typhoid", "widal", "covid", "viral"], fever],
-  [["infection", "sepsis", "culture", "sensitivity"], infection],
-  [["arthritis", "rheumatoid", "ra factor", "joint", "uric acid", "gout", "crp", "esr", "anti ccp"], arthritis],
-  [["iron", "ferritin", "tibc", "anemia", "anaemia"], iron],
-  [["electrolyte", "sodium", "potassium", "calcium", "magnesium", "phosphorus"], electrolyte],
-  [["panel", "profile", "screen", "package", "basic", "routine"], bloodPanel],
-  [["blood", "serum", "plasma", "test"], bloodGeneral],
+// Each category maps keywords to an ARRAY of images for rotation
+const keywordImageMap: [string[], string[]][] = [
+  [["aarogyam"], [aarogyamFamily]],
+  [["full body", "comprehensive", "annual"], [fullBody, familyHealth]],
+  [["wellness", "preventive", "master", "executive"], [familyHealth, fullBody]],
+  [["women", "female", "pcos", "pcod", "pregnancy", "prenatal", "antenatal"], [womenHealth]],
+  [["men", "male", "psa", "prostate"], [mensHealth]],
+  [["thyroid", "t3", "t4", "tsh"], [thyroid]],
+  [["diabetes", "hba1c", "glycosylated"], [diabetes, glucose]],
+  [["sugar", "glucose", "fasting sugar", "pp sugar", "gtт", "ogtt"], [glucose, diabetes]],
+  [["heart", "cardiac", "cardio", "ecg", "troponin", "bnp"], [heart]],
+  [["lipid", "cholesterol", "hdl", "ldl", "triglyceride", "vldl"], [lipid, heart]],
+  [["vitamin", "vit d", "vit b", "b12", "25-oh", "folate", "folic"], [vitamin]],
+  [["kidney", "renal", "kft", "creatinine", "bun", "urea"], [kidney]],
+  [["liver", "hepatic", "lft", "sgpt", "sgot", "bilirubin"], [liver]],
+  [["hepatitis", "hbsag", "hcv"], [liver, infection]],
+  [["cbc", "complete blood count", "hemoglobin", "haemoglobin"], [cbc]],
+  [["platelet", "wbc", "rbc", "blood count"], [cbc, bloodGeneral]],
+  [["urine", "urinalysis", "microalbumin"], [urine]],
+  [["stool", "occult", "fecal"], [stool]],
+  [["hormone", "estrogen", "testosterone", "prolactin", "lh", "fsh"], [hormone]],
+  [["fertility", "amh", "semen", "sperm"], [hormone, mensHealth]],
+  [["allergy", "ige", "immunoglobulin", "food intolerance"], [allergy]],
+  [["immunity", "immune", "autoimmune", "ana", "complement"], [immunity]],
+  [["senior", "elderly", "geriatric", "old age", "50+", "60+"], [seniorHealth]],
+  [["fever", "dengue", "malaria", "typhoid", "widal"], [fever]],
+  [["covid", "viral", "flu", "influenza"], [fever, infection]],
+  [["infection", "sepsis", "culture", "sensitivity", "procalcitonin"], [infection]],
+  [["arthritis", "rheumatoid", "ra factor", "anti ccp"], [arthritis]],
+  [["joint", "uric acid", "gout", "crp", "esr"], [arthritis, bone]],
+  [["iron", "ferritin", "tibc", "anemia", "anaemia"], [iron]],
+  [["electrolyte", "sodium", "potassium"], [electrolyte]],
+  [["calcium", "magnesium", "phosphorus", "bone", "osteo"], [bone, electrolyte]],
+  [["cancer", "tumor", "tumour", "marker", "cea", "afp", "ca 125", "ca 19"], [cancer]],
+  [["pancrea", "amylase", "lipase"], [pancreas]],
+  [["eye", "vision", "retino"], [eye]],
+  [["panel", "profile", "screen"], [bloodPanel, lipid]],
+  [["package", "basic", "routine", "mini", "maxi"], [bloodPanel, bloodGeneral]],
+  [["blood", "serum", "plasma"], [bloodGeneral, bloodPanel]],
 ];
+
+// All available images for fallback rotation
+const allImages = [
+  defaultBlood, familyHealth, thyroid, diabetes, heart, vitamin,
+  bloodGeneral, kidney, liver, aarogyamFamily, cbc, urine,
+  hormone, allergy, seniorHealth, infection, bloodPanel,
+  womenHealth, iron, fever, mensHealth, arthritis, fullBody,
+  electrolyte, lipid, bone, pancreas, eye, immunity, cancer,
+  glucose, stool,
+];
+
+// Simple hash to get a deterministic number from a string
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
 
 export function getTestImage(test: { name: string; image_url?: string | null; description?: string | null }): string {
   if (test.image_url) return test.image_url;
 
   const searchText = `${test.name} ${test.description || ""}`.toLowerCase();
+  const nameHash = hashString(test.name);
 
-  for (const [keywords, image] of keywordImageMap) {
+  for (const [keywords, images] of keywordImageMap) {
     if (keywords.some((kw) => searchText.includes(kw))) {
-      return image;
+      // Use hash to pick from the category's image array
+      return images[nameHash % images.length];
     }
   }
 
-  return defaultBlood;
+  // Fallback: use hash to pick from ALL images so even unmatched tests get unique images
+  return allImages[nameHash % allImages.length];
 }
