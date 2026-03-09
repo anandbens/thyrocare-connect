@@ -129,6 +129,7 @@ export type Database = {
           description: string | null
           fasting_required: boolean | null
           id: string
+          image_url: string | null
           is_active: boolean | null
           is_popular: boolean | null
           name: string
@@ -148,6 +149,7 @@ export type Database = {
           description?: string | null
           fasting_required?: boolean | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           is_popular?: boolean | null
           name: string
@@ -167,6 +169,7 @@ export type Database = {
           description?: string | null
           fasting_required?: boolean | null
           id?: string
+          image_url?: string | null
           is_active?: boolean | null
           is_popular?: boolean | null
           name?: string

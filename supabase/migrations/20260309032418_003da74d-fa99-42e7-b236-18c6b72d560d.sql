@@ -1,0 +1,1 @@
+ALTER TABLE public.lab_tests ADD COLUMN IF NOT EXISTS image_url text DEFAULT NULL;
