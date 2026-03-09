@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Phone, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Mail, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,8 +15,8 @@ const VerifyOtp = () => {
   const { items } = useCart();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [step, setStep] = useState<"phone" | "otp">("phone");
-  const [phone, setPhone] = useState("");
+  const [step, setStep] = useState<"email" | "otp">("email");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(0);
@@ -50,23 +50,23 @@ const VerifyOtp = () => {
     }
   }, [resendTimer]);
 
-  const validatePhone = (value: string) => /^[6-9]\d{9}$/.test(value);
+  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   const handleSendOtp = async () => {
-    if (!validatePhone(phone)) {
-      toast({ title: "Invalid mobile number", description: "Please enter a valid 10-digit Indian mobile number.", variant: "destructive" });
+    if (!validateEmail(email)) {
+      toast({ title: "Invalid email", description: "Please enter a valid email address.", variant: "destructive" });
       return;
     }
 
     setLoading(true);
     try {
-      // Rate limiting: Check recent OTP requests for this phone (max 5 in 15 min)
+      // Rate limiting: Check recent OTP requests for this email (max 5 in 15 min)
       const fifteenMinAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
       const { count: recentCount } = await supabase
         .from("otp_logs")
         .select("id", { count: "exact", head: true })
-        .eq("email", phone)
-        .eq("purpose", "checkout_sms")
+        .eq("email", email)
+        .eq("purpose", "checkout")
         .gte("created_at", fifteenMinAgo);
 
       if (recentCount && recentCount >= 5) {
@@ -81,28 +81,19 @@ const VerifyOtp = () => {
 
       // Store OTP in database
       const { error: otpError } = await supabase.from("otp_logs").insert({
-        email: phone,
+        email: email,
         otp_code: otpCode,
         expires_at: expiresAt,
-        purpose: "checkout_sms",
+        purpose: "checkout",
       });
 
       if (otpError) throw otpError;
 
-      // Send SMS via edge function
-      const { data, error } = await supabase.functions.invoke("send-sms-otp", {
-        body: { phone, otp: otpCode },
+      // For now, show OTP in toast (until email delivery is integrated)
+      toast({
+        title: "OTP Sent!",
+        description: `Your verification code is: ${otpCode} (Check admin OTP logs)`,
       });
-
-      if (error) {
-        console.error("SMS send error:", error);
-        toast({
-          title: "OTP Generated",
-          description: "SMS gateway may not be configured. Check OTP logs in admin panel.",
-        });
-      } else {
-        toast({ title: "OTP Sent!", description: `A 6-digit OTP has been sent to +91 ${phone}` });
-      }
 
       setStep("otp");
       setResendTimer(60);
@@ -113,8 +104,6 @@ const VerifyOtp = () => {
     }
   };
 
-  const FALLBACK_OTP = fallbackOtp;
-
   const handleVerifyOtp = async () => {
     if (otp.length !== 6) {
       toast({ title: "Invalid OTP", description: "Please enter the 6-digit OTP.", variant: "destructive" });
@@ -123,13 +112,12 @@ const VerifyOtp = () => {
 
     setLoading(true);
     try {
-      // Verify OTP from database
       const { data: otpRecords, error } = await supabase
         .from("otp_logs")
         .select("*")
-        .eq("email", phone)
+        .eq("email", email)
         .eq("otp_code", otp)
-        .eq("purpose", "checkout_sms")
+        .eq("purpose", "checkout")
         .eq("is_verified", false)
         .gte("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
@@ -139,7 +127,7 @@ const VerifyOtp = () => {
 
       const dbVerified = otpRecords && otpRecords.length > 0;
 
-      if (!dbVerified && otp !== FALLBACK_OTP) {
+      if (!dbVerified && otp !== fallbackOtp) {
         toast({ title: "Invalid or expired OTP", description: "Please try again or request a new OTP.", variant: "destructive" });
         setLoading(false);
         return;
@@ -154,12 +142,11 @@ const VerifyOtp = () => {
       }
 
       toast({ title: "Verified! ✅", description: "Redirecting to checkout..." });
-      navigate("/checkout", { state: { verifiedPhone: phone } });
+      navigate("/checkout", { state: { verifiedEmail: email } });
     } catch (err: any) {
-      // If DB check fails entirely, still allow fallback OTP
-      if (otp === FALLBACK_OTP) {
+      if (otp === fallbackOtp) {
         toast({ title: "Verified! ✅", description: "Redirecting to checkout..." });
-        navigate("/checkout", { state: { verifiedPhone: phone } });
+        navigate("/checkout", { state: { verifiedEmail: email } });
         return;
       }
       toast({ title: "Verification failed", description: err.message, variant: "destructive" });
@@ -189,48 +176,41 @@ const VerifyOtp = () => {
           <Card>
             <CardHeader className="text-center">
               <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-                {step === "phone" ? (
-                  <Phone className="h-6 w-6 text-primary" />
+                {step === "email" ? (
+                  <Mail className="h-6 w-6 text-primary" />
                 ) : (
                   <ShieldCheck className="h-6 w-6 text-primary" />
                 )}
               </div>
               <CardTitle className="font-display">
-                {step === "phone" ? "Verify Your Mobile Number" : "Enter OTP"}
+                {step === "email" ? "Verify Your Email" : "Enter OTP"}
               </CardTitle>
               <CardDescription>
-                {step === "phone"
-                  ? "We'll send a one-time password to verify your identity"
-                  : `Enter the 6-digit OTP sent to +91 ${phone}`}
+                {step === "email"
+                  ? "We'll send a one-time password to verify your email address"
+                  : `Enter the 6-digit OTP sent to ${email}`}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {step === "phone" ? (
+              {step === "email" ? (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Mobile Number *</Label>
-                    <div className="flex gap-2">
-                      <div className="flex h-10 items-center rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground">
-                        +91
-                      </div>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        maxLength={10}
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                        placeholder="Enter 10-digit mobile number"
-                        className="flex-1"
-                      />
-                    </div>
-                    {phone.length > 0 && !validatePhone(phone) && (
-                      <p className="text-sm text-destructive">Enter a valid 10-digit mobile number starting with 6-9</p>
+                    <Label htmlFor="email">Email Address *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="email@example.com"
+                    />
+                    {email.length > 0 && !validateEmail(email) && (
+                      <p className="text-sm text-destructive">Enter a valid email address</p>
                     )}
                   </div>
                   <Button
                     className="w-full"
                     onClick={handleSendOtp}
-                    disabled={loading || !validatePhone(phone)}
+                    disabled={loading || !validateEmail(email)}
                   >
                     {loading ? "Sending..." : "Send OTP"}
                   </Button>
@@ -268,10 +248,10 @@ const VerifyOtp = () => {
                   </div>
                   <button
                     type="button"
-                    onClick={() => { setStep("phone"); setOtp(""); }}
+                    onClick={() => { setStep("email"); setOtp(""); }}
                     className="w-full text-sm text-muted-foreground hover:text-foreground text-center"
                   >
-                    Change mobile number
+                    Change email address
                   </button>
                 </>
               )}
