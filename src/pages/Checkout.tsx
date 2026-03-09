@@ -379,7 +379,7 @@ const Checkout = () => {
                       <div className="flex gap-4">
                         {["male", "female", "other"].map((g) => (
                           <label key={g} className="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="gender" value={g} checked={form.gender === g} onChange={(e) => update("gender", e.target.value)} className="accent-primary" />
+                            <input type="radio" name="gender" value={g} checked={form.gender === g} onChange={(e) => update("gender", e.target.value)} className="accent-primary" disabled={isExistingUser && !!form.gender} />
                             <span className="text-sm capitalize">{g}</span>
                           </label>
                         ))}
