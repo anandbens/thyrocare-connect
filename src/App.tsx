@@ -36,6 +36,7 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminEmailTemplates from "./pages/admin/AdminEmailTemplates";
 
+
 const queryClient = new QueryClient();
 
 const App = () => (
