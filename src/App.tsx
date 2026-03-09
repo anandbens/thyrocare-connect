@@ -52,7 +52,7 @@ const App = () => (
                 <Route path="/tests/:id" element={<TestDetail />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
-                <Route path="/verify-otp" element={<SetPassword />} />
+                <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/set-password" element={<SetPassword />} />
