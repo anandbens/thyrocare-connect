@@ -310,7 +310,7 @@ const Checkout = () => {
 
           {isExistingUser && (
             <div className="mb-4 p-3 rounded-lg bg-primary/10 text-primary text-sm">
-              ✅ Welcome back! We've pre-filled your details from your previous order. You can update the alternative number and address if needed.
+              ✅ Welcome back! We've pre-filled your details from your profile. You can update your address and collection preferences below.
             </div>
           )}
 
