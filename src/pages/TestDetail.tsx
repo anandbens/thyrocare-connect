@@ -1,6 +1,6 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Check, Plus, Clock, Droplets, AlertCircle, ChevronDown } from "lucide-react";
+import { ArrowLeft, Check, Plus, Clock, Droplets, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +27,6 @@ const TestDetail = () => {
         .eq("is_active", true)
         .single();
       if (data) {
-        // Ensure parameters_grouped is properly parsed
         const parsed = {
           ...data,
           parameters_grouped: Array.isArray(data.parameters_grouped)
@@ -44,6 +43,64 @@ const TestDetail = () => {
     };
     if (id) fetchTest();
   }, [id]);
+
+  // Dynamic SEO meta tags
+  useEffect(() => {
+    if (!test) return;
+    const metaTitle = test.meta_title || `${test.name} - Book Online at ₹${test.price} | Thyrocare Nagercoil`;
+    const metaDesc = test.meta_description || `Book ${test.name} online at just ₹${test.price} (MRP ₹${test.original_price}). ${test.parameters || ''} parameters included. Free home sample collection in Nagercoil & Kanyakumari district. NABL accredited lab. Reports in ${test.turnaround || '24-48 hours'}.`;
+
+    document.title = metaTitle;
+    const descTag = document.querySelector('meta[name="description"]');
+    if (descTag) descTag.setAttribute("content", metaDesc);
+    else {
+      const meta = document.createElement("meta");
+      meta.name = "description";
+      meta.content = metaDesc;
+      document.head.appendChild(meta);
+    }
+
+    // OG tags
+    const setOg = (prop: string, content: string) => {
+      let tag = document.querySelector(`meta[property="${prop}"]`);
+      if (tag) tag.setAttribute("content", content);
+    };
+    setOg("og:title", metaTitle);
+    setOg("og:description", metaDesc);
+    setOg("og:url", window.location.href);
+
+    // JSON-LD for individual test
+    const existingLd = document.querySelector('script[data-test-ld]');
+    if (existingLd) existingLd.remove();
+    const ld = document.createElement("script");
+    ld.type = "application/ld+json";
+    ld.setAttribute("data-test-ld", "true");
+    ld.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "MedicalTest",
+      "name": test.name,
+      "description": metaDesc,
+      "usesDevice": "Laboratory equipment",
+      "offers": {
+        "@type": "Offer",
+        "price": test.price,
+        "priceCurrency": "INR",
+        "availability": "https://schema.org/InStock"
+      },
+      "provider": {
+        "@type": "MedicalBusiness",
+        "name": "Thyrocare Nagercoil",
+        "areaServed": ["Nagercoil", "Kanyakumari", "Marthandam", "Colachel", "Thuckalay"]
+      }
+    });
+    document.head.appendChild(ld);
+
+    return () => {
+      document.title = "Thyrocare Nagercoil | Book Blood Tests Online - Home Collection";
+      const ldTag = document.querySelector('script[data-test-ld]');
+      if (ldTag) ldTag.remove();
+    };
+  }, [test]);
 
   if (loading) {
     return (
@@ -85,7 +142,7 @@ const TestDetail = () => {
               <div className="rounded-2xl overflow-hidden shadow-lg">
                 <img
                   src={getTestImage(test)}
-                  alt={test.name}
+                  alt={`${test.name} - Blood test in Nagercoil`}
                   className="w-full h-48 sm:h-64 object-cover"
                 />
               </div>
@@ -118,7 +175,7 @@ const TestDetail = () => {
                 )}
               </div>
 
-              {/* Grouped parameters with modern accordion */}
+              {/* Grouped parameters */}
               {hasGroups && (
                 <Card className="overflow-hidden">
                   <CardHeader className="bg-muted/40 border-b">
@@ -130,11 +187,7 @@ const TestDetail = () => {
                   <CardContent className="p-0">
                     <Accordion type="multiple" className="w-full">
                       {paramGroups.map((group, idx) => (
-                        <AccordionItem
-                          key={idx}
-                          value={`group-${idx}`}
-                          className="border-b last:border-b-0"
-                        >
+                        <AccordionItem key={idx} value={`group-${idx}`} className="border-b last:border-b-0">
                           <AccordionTrigger className="px-5 py-4 hover:no-underline hover:bg-muted/30 transition-colors">
                             <div className="flex items-center gap-3 text-left">
                               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
@@ -142,9 +195,7 @@ const TestDetail = () => {
                               </div>
                               <div>
                                 <span className="font-semibold text-foreground">{group.group}</span>
-                                <span className="text-xs text-muted-foreground ml-2">
-                                  ({group.count || group.tests.length} Tests)
-                                </span>
+                                <span className="text-xs text-muted-foreground ml-2">({group.count || group.tests.length} Tests)</span>
                               </div>
                             </div>
                           </AccordionTrigger>
@@ -218,7 +269,7 @@ const TestDetail = () => {
                   )}
 
                   <div className="space-y-2 text-sm text-muted-foreground pt-3 border-t">
-                    <p className="flex items-center gap-2">✅ Free home collection</p>
+                    <p className="flex items-center gap-2">✅ Free home collection in Nagercoil & Kanyakumari</p>
                     <p className="flex items-center gap-2">✅ NABL accredited lab</p>
                     <p className="flex items-center gap-2">✅ Digital reports on email</p>
                   </div>
