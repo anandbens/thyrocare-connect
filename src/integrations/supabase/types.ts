@@ -132,6 +132,8 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           is_popular: boolean | null
+          meta_description: string | null
+          meta_title: string | null
           name: string
           original_price: number
           parameters: number | null
@@ -152,6 +154,8 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           is_popular?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
           name: string
           original_price: number
           parameters?: number | null
@@ -172,6 +176,8 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           is_popular?: boolean | null
+          meta_description?: string | null
+          meta_title?: string | null
           name?: string
           original_price?: number
           parameters?: number | null

@@ -61,6 +61,23 @@ const Tests = () => {
 
   const getCategorySlug = (name: string) => name.toLowerCase().replace(/\s+/g, "-");
 
+  // Dynamic SEO for tests page
+  useEffect(() => {
+    const catName = activeCategory !== "all"
+      ? categories.find((c) => getCategorySlug(c.name) === activeCategory)?.name
+      : null;
+    const title = catName
+      ? `${catName} Tests in Nagercoil - Book Online | Thyrocare Nagercoil`
+      : "All Blood Tests & Health Packages in Nagercoil | Thyrocare - Book Online";
+    const desc = catName
+      ? `Book affordable ${catName.toLowerCase()} tests online in Nagercoil & Kanyakumari district. Free home collection, NABL accredited lab, reports in 24-48 hrs.`
+      : "Browse 500+ affordable blood tests & health packages in Nagercoil. Thyrocare authorized centre with free home sample collection across Kanyakumari district.";
+    document.title = title;
+    const descTag = document.querySelector('meta[name="description"]');
+    if (descTag) descTag.setAttribute("content", desc);
+    return () => { document.title = "Thyrocare Nagercoil | Book Blood Tests Online - Home Collection"; };
+  }, [activeCategory, categories]);
+
   return (
     <Layout>
       <section className="py-10">
@@ -69,10 +86,10 @@ const Tests = () => {
             <h1 className="text-3xl font-display font-bold text-foreground mb-2">
               {activeCategory !== "all"
                 ? categories.find((c) => getCategorySlug(c.name) === activeCategory)?.name || "All Tests"
-                : "All Tests & Packages"}
+                : "Blood Tests & Health Packages in Nagercoil"}
             </h1>
             <p className="text-muted-foreground">
-              Browse and book from our comprehensive range of diagnostic tests
+              Browse and book affordable diagnostic tests with free home collection in Kanyakumari district
             </p>
           </div>
 

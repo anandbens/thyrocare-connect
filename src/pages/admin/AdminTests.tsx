@@ -25,6 +25,7 @@ const emptyTest = {
   price: 0, original_price: 0,
   is_popular: false, turnaround: "24-48 hours", fasting_required: false,
   sample_type: "Blood", is_active: true, image_url: "",
+  meta_title: "", meta_description: "",
 };
 
 const AdminTests = () => {
@@ -67,34 +68,26 @@ const AdminTests = () => {
   const openNew = () => { setForm(emptyTest); setParamsText(""); setParamGroups([]); setEditing(false); setDialogOpen(true); };
   const openEdit = (test: any) => {
     const groups = (test.parameters_grouped || []) as ParamGroup[];
-    setForm({ ...test, category_id: test.category_id || "", parameters_grouped: groups });
+    setForm({ ...test, category_id: test.category_id || "", parameters_grouped: groups, meta_title: test.meta_title || "", meta_description: test.meta_description || "" });
     setParamsText((test.parameters_list || []).join(", "));
     setParamGroups(groups);
     setEditing(true);
     setDialogOpen(true);
   };
 
-  // Param group helpers
   const addGroup = () => setParamGroups([...paramGroups, { group: "", count: 0, tests: [] }]);
   const removeGroup = (idx: number) => setParamGroups(paramGroups.filter((_, i) => i !== idx));
-  const updateGroupName = (idx: number, name: string) => {
-    const updated = [...paramGroups];
-    updated[idx].group = name;
-    setParamGroups(updated);
-  };
+  const updateGroupName = (idx: number, name: string) => { const u = [...paramGroups]; u[idx].group = name; setParamGroups(u); };
   const updateGroupTests = (idx: number, testsStr: string) => {
-    const updated = [...paramGroups];
-    const testsList = testsStr.split(",").map(s => s.trim()).filter(Boolean);
-    updated[idx].tests = testsList;
-    updated[idx].count = testsList.length;
-    setParamGroups(updated);
+    const u = [...paramGroups];
+    const tl = testsStr.split(",").map(s => s.trim()).filter(Boolean);
+    u[idx].tests = tl; u[idx].count = tl.length;
+    setParamGroups(u);
   };
 
   const handleSave = async () => {
-    // Build flat params list from groups if groups exist, otherwise from paramsText
     let paramsList: string[];
     let finalGroups: ParamGroup[];
-
     if (paramGroups.length > 0 && paramGroups.some(g => g.tests.length > 0)) {
       paramsList = paramGroups.flatMap(g => g.tests);
       finalGroups = paramGroups.filter(g => g.group && g.tests.length > 0);
@@ -112,6 +105,8 @@ const AdminTests = () => {
       is_popular: form.is_popular, turnaround: form.turnaround,
       fasting_required: form.fasting_required, sample_type: form.sample_type, is_active: form.is_active,
       image_url: form.image_url || null,
+      meta_title: form.meta_title || null,
+      meta_description: form.meta_description || null,
     };
     let error;
     if (editing) ({ error } = await supabase.from("lab_tests").update(payload).eq("id", form.id));
@@ -241,8 +236,22 @@ const AdminTests = () => {
                   <img src={form.image_url} alt="Preview" className="w-full h-full object-cover" />
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">Paste an image URL for the test tile and detail page. Leave empty for default image.</p>
+              <p className="text-xs text-muted-foreground">Paste an image URL for the test tile and detail page. Leave empty for auto-matched image.</p>
             </div>
+
+            {/* SEO Fields */}
+            <div className="sm:col-span-2 space-y-4 rounded-lg border border-border/60 p-4 bg-muted/20">
+              <h3 className="font-semibold text-sm text-foreground flex items-center gap-2">🔍 SEO Settings <span className="text-xs text-muted-foreground font-normal">(optional — auto-generated if empty)</span></h3>
+              <div className="space-y-2">
+                <Label>Meta Title <span className="text-xs text-muted-foreground">({(form.meta_title || "").length}/60 chars)</span></Label>
+                <Input value={form.meta_title || ""} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} placeholder="e.g. Thyroid Test in Nagercoil - Book Online at ₹299" maxLength={70} />
+              </div>
+              <div className="space-y-2">
+                <Label>Meta Description <span className="text-xs text-muted-foreground">({(form.meta_description || "").length}/160 chars)</span></Label>
+                <Textarea value={form.meta_description || ""} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} placeholder="e.g. Book thyroid test online in Nagercoil at affordable prices. Free home collection in Kanyakumari district. NABL accredited, reports in 24 hrs." maxLength={200} rows={3} />
+              </div>
+            </div>
+
             <div className="space-y-2 sm:col-span-2"><Label>Parameters (comma separated — used when no groups below)</Label><Textarea value={paramsText} onChange={(e) => setParamsText(e.target.value)} placeholder="e.g., T3, T4, TSH" /></div>
             
             {/* Grouped Parameters */}
@@ -257,23 +266,11 @@ const AdminTests = () => {
               {paramGroups.map((g, idx) => (
                 <Card key={idx} className="p-3 space-y-2">
                   <div className="flex items-center gap-2">
-                    <Input
-                      placeholder="Group name (e.g. Liver, Thyroid)"
-                      value={g.group}
-                      onChange={(e) => updateGroupName(idx, e.target.value)}
-                      className="flex-1"
-                    />
+                    <Input placeholder="Group name (e.g. Liver, Thyroid)" value={g.group} onChange={(e) => updateGroupName(idx, e.target.value)} className="flex-1" />
                     <Badge variant="secondary">{g.tests.length} tests</Badge>
-                    <Button type="button" variant="ghost" size="icon" onClick={() => removeGroup(idx)}>
-                      <X className="h-4 w-4 text-destructive" />
-                    </Button>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => removeGroup(idx)}><X className="h-4 w-4 text-destructive" /></Button>
                   </div>
-                  <Textarea
-                    placeholder="Comma-separated tests: Hba1c, Average blood glucose (abg)"
-                    value={g.tests.join(", ")}
-                    onChange={(e) => updateGroupTests(idx, e.target.value)}
-                    rows={2}
-                  />
+                  <Textarea placeholder="Comma-separated tests: Hba1c, Average blood glucose (abg)" value={g.tests.join(", ")} onChange={(e) => updateGroupTests(idx, e.target.value)} rows={2} />
                 </Card>
               ))}
             </div>

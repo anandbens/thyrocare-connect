@@ -23,6 +23,8 @@ export interface LabTest {
   sample_type: string | null;
   is_active: boolean | null;
   image_url: string | null;
+  meta_title: string | null;
+  meta_description: string | null;
   test_categories?: { name: string; id: string } | null;
 }
 
