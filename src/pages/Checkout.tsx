@@ -56,10 +56,18 @@ const Checkout = () => {
 
   const [isExistingUser, setIsExistingUser] = useState(false);
 
-  // Auto-populate from existing orders if phone matches
+  // Auto-populate from profile and existing orders if phone matches
   useEffect(() => {
     if (!verifiedPhone) return;
     const fetchExistingData = async () => {
+      // First check profiles table for user info
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, email, phone")
+        .eq("phone", verifiedPhone)
+        .maybeSingle();
+
+      // Then check previous orders for address and additional details
       const { data: existingOrders } = await supabase
         .from("orders")
         .select("*")
@@ -67,24 +75,24 @@ const Checkout = () => {
         .order("created_at", { ascending: false })
         .limit(1);
 
-      if (existingOrders && existingOrders.length > 0) {
-        const o = existingOrders[0];
+      if (profileData || (existingOrders && existingOrders.length > 0)) {
         setIsExistingUser(true);
+        const o = existingOrders?.[0];
         setForm((prev) => ({
           ...prev,
-          name: o.customer_name || prev.name,
-          email: o.customer_email || prev.email,
+          name: profileData?.full_name || o?.customer_name || prev.name,
+          email: profileData?.email || o?.customer_email || prev.email,
           phone: verifiedPhone,
-          altPhone: o.alt_phone || "",
-          age: o.age?.toString() || "",
-          gender: o.gender || "male",
-          address1: o.address1 || "",
-          address2: o.address2 || "",
-          landmark: o.landmark || "",
-          district: o.district || "",
-          area: o.area || "",
-          state: o.state || "Tamil Nadu",
-          pincode: o.pincode || "",
+          altPhone: o?.alt_phone || "",
+          age: o?.age?.toString() || "",
+          gender: o?.gender || "male",
+          address1: o?.address1 || "",
+          address2: o?.address2 || "",
+          landmark: o?.landmark || "",
+          district: o?.district || "",
+          area: o?.area || "",
+          state: o?.state || "Tamil Nadu",
+          pincode: o?.pincode || "",
         }));
       }
     };
