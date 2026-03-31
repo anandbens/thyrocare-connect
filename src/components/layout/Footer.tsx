@@ -66,9 +66,8 @@ const Footer = () => {
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/30">
+        <div className="border-t border-white/10 mt-10 pt-6 text-center text-xs text-white/30">
           <p>© {new Date().getFullYear()} Thyrocare Nagercoil. All rights reserved.</p>
-          <p>Powered by <a href="https://www.ecoyte.com" target="_blank" rel="noopener noreferrer" className="text-[hsl(4,76%,61%)] hover:underline">Ecoyte Business Solutions Private Limited</a></p>
         </div>
       </div>
     </footer>
